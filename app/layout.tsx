@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${MonaSans.variable} ${MonaSans.variable} antialiased pattern`}
+        className={`${MonaSans.variable} antialiased pattern`}
       >
         {children}
         <Toaster/>

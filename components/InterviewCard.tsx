@@ -6,11 +6,25 @@ import { getRandomInterviewCover } from '@/utils';
 import { Button } from './ui/button';
 import Link from 'next/link';
 
-const InterviewCard = ({interviewId, userId,role,type,techstack,createdAt}) => {
+interface Feedback {
+    createdAt: string | Date;
+    totalScore: number;
+    finalAssessment: string;
+}
 
-    const feedback= null as Feedback | null;
-    const normalizedType = /mix/gi.test(type) ?'Mixed' : type;
-    const formattedDate=dayjs(feedback?.createdAt||createdAt||Date.now).format('MMM D, YYYY');
+interface InterviewCardProps {
+    interviewId: string;
+    userId: string;
+    role: string;
+    type: string;
+    techstack: string[];
+    createdAt: string | Date;
+}
+
+const InterviewCard = ({interviewId, userId, role, type, techstack, createdAt}: InterviewCardProps) => {
+    const feedback = null as Feedback | null;
+    const normalizedType = /mix/gi.test(type) ? 'Mixed' : type;
+    const formattedDate = dayjs(feedback?.createdAt || createdAt || Date.now()).format('MMM D, YYYY');
   return (
     <div className='card-border w-[360px] max-sm:w-full min-h-96'>
         <div className='card-interview'>
@@ -41,7 +55,9 @@ const InterviewCard = ({interviewId, userId,role,type,techstack,createdAt}) => {
             <div className='flex flex-row justify-between'>
                 <DisplayTechIcons techStack={techstack}/>
                 <Button className="btn-primary">
-                    <Link href={feedback? '/interview/${interviewId}/feedback':'/interview/${interviewId}'}>{feedback ? 'Check Feedback':'View Interview'}</Link>
+                    <Link href={feedback ? `/interview/${interviewId}/feedback` : `/interview/${interviewId}`}>
+                        {feedback ? 'Check Feedback' : 'View Interview'}
+                    </Link>
                 </Button>
 
             </div>

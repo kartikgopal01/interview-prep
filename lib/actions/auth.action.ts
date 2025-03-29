@@ -86,18 +86,18 @@ export async function signIn(params:SignInParams){
 
 export async function setSessionCookie(idToken:string){
     try {
-        const sessionCookie = await auth.createSessionCookie(idToken, {
+    const sessionCookie = await auth.createSessionCookie(idToken, {
             expiresIn: 60 * 60 * 24 * 7 * 1000, // 1 week
         });
-        
+   
         // Set cookie with properly formatted options
         const cookieStore = await cookies();
-        cookieStore.set("session", sessionCookie, {
+cookieStore.set("session", sessionCookie, {
             maxAge: 60 * 60 * 24 * 7, // 1 week in seconds (note: not milliseconds)
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            path: "/",
-            sameSite: "lax"
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    sameSite: "lax"
         });
         
         console.log("Session cookie set successfully");

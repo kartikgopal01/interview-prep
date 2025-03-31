@@ -97,3 +97,26 @@ interface InterviewFormProps {
 interface TechIconProps {
   techStack: string[];
 }
+
+interface PeerInterview {
+  id: string;
+  userId: string;
+  role: string;
+  level: string;
+  techstack: string[];
+  status: 'pending' | 'active' | 'completed';
+  interviewerId: string | null;
+  roomId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PeerFeedback {
+  id: string;
+  interviewId: string;
+  interviewerId: string;
+  intervieweeId: string;
+  rating: number;
+  feedback: string;
+  createdAt: string;
+}

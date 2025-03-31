@@ -3,6 +3,7 @@ import Image from 'next/image'
 import {ReactNode} from 'react'
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/actions/auth.action';
+import Navigation from '@/components/Navigation';
 
 const Rootlayout = async ({children}:{children: React.ReactNode}) => {
   const isUserAuthenticated = await isAuthenticated();
@@ -12,12 +13,18 @@ const Rootlayout = async ({children}:{children: React.ReactNode}) => {
   
   return (
     <div className='root-layout'>
-      <Link href='/' className='flex items-center gap-2'>
-        <Image src='/logo.svg' alt="logo" width={38} height={32} />
-
-        <h2 className='text-primary-100'>InterviewPrep</h2>
-      </Link>
-      {children}
+      <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 mb-4">
+        <Link href='/' className='flex items-center gap-2'>
+          <Image src='/logo.svg' alt="logo" width={38} height={32} />
+          <h2 className='text-primary-100'>InterviewPrep</h2>
+        </Link>
+      </header>
+      
+      <Navigation />
+      
+      <main className="px-4">
+        {children}
+      </main>
     </div>
   )
 }

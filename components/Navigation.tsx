@@ -15,7 +15,7 @@ const Navigation = () => {
   };
   
   const navigationItems = [
-    { name: 'AI Interviews', path: '/interview' },
+    { name: 'AI Interviews', path: '/' },
     { name: 'Peer Interviews', path: '/peer-interview' },
   ];
   

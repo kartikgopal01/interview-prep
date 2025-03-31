@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import ThemeToggle from './ThemeToggle';
 
 const Navigation = () => {
   const pathname = usePathname();
@@ -21,7 +22,7 @@ const Navigation = () => {
   
   return (
     <nav className="mb-6 ">
-      <div className="flex justify-between items-center px-4 md:justify-center">
+      <div className="flex justify-between items-center px-4 md:px-6">
         {/* Desktop Menu */}
         <div className="hidden md:flex gap-6">
           {navigationItems.map((item) => (
@@ -37,6 +38,11 @@ const Navigation = () => {
               {item.name}
             </Link>
           ))}
+        </div>
+
+        {/* Theme Toggle */}
+        <div className="flex items-center">
+          <ThemeToggle />
         </div>
 
         {/* Mobile Menu Button */}
@@ -90,6 +96,7 @@ const Navigation = () => {
             {item.name}
           </Link>
         ))}
+       
       </div>
     </nav>
   );

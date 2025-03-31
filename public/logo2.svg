@@ -1,0 +1,32 @@
+<svg width="900" height="200" viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    :root {
+      --text-color: #ffffff;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --text-color: #000000;
+      }
+    }
+    .shadow { fill: #888; }
+    .white { fill: var(--text-color); }
+    .blue { fill: #1E90FF; }
+    .orange { fill: #FF6600; }
+    .font { font-family: Arial, sans-serif; font-weight: bold; }
+  </style>
+  
+  <!-- Book Icon -->
+  <g class="orange">
+    <path d="M150 40 Q120 30 90 40 L100 60 Q125 50 150 60 Z"/>
+    <path d="M150 40 Q180 30 210 40 L200 60 Q175 50 150 60 Z"/>
+    <path d="M150 40 Q135 15 120 10 V30 Q135 25 150 40 Z"/>
+    <path d="M150 40 Q165 15 180 10 V30 Q165 25 150 40 Z"/>
+  </g>
+  
+  <!-- Text Shadow -->
+  <text x="50" y="150" class="font shadow" font-size="80">InterviewPrep</text>
+  
+  <!-- Main Text -->
+  <text x="50" y="145" class="font white" font-size="80">Interview</text>
+  <text x="400" y="145" class="font blue" font-size="80">Prep</text>
+</svg>

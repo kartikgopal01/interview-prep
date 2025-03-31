@@ -156,7 +156,7 @@ const PeerInterviewPage = async ({ params }: PeerInterviewPageProps) => {
           
           <div className="p-4 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
             <h3 className="text-lg font-semibold mb-3 flex items-center">
-              <Image src="/robot.png" alt="AI" width={24} height={24} className="mr-2" />
+              <Image src="/robot2.png" alt="AI" width={24} height={24} className="mr-2" />
               What's Next?
             </h3>
             <p className="mb-3">

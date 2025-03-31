@@ -28,7 +28,6 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [connectionAttempts, setConnectionAttempts] = React.useState(0);
-  const [zegoModule, setZegoModule] = React.useState<any>(null);
   
   // Handle errors safely
   const handleError = (message: string) => {
@@ -50,21 +49,6 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
     initializeZego();
   };
 
-  // Load Zego module dynamically
-  const loadZegoModule = React.useCallback(async () => {
-    try {
-      if (!zegoModule) {
-        const { ZegoUIKitPrebuilt } = await import('@zegocloud/zego-uikit-prebuilt');
-        setZegoModule(ZegoUIKitPrebuilt);
-        return ZegoUIKitPrebuilt;
-      }
-      return zegoModule;
-    } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error loading Zego module';
-      throw new Error(`Failed to load Zego module: ${errorMessage}`);
-    }
-  }, [zegoModule]);
-
   // Initialize Zego
   const initializeZego = React.useCallback(async () => {
     // Clear any previous content
@@ -84,38 +68,23 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
     }
     
     try {
-      // Load Zego module
-      const ZegoUIKitPrebuilt = await loadZegoModule();
-      if (!ZegoUIKitPrebuilt) {
-        throw new Error('Failed to load Zego module');
-      }
+      // Import Zego SDK
+      const { ZegoUIKitPrebuilt } = await import('@zegocloud/zego-uikit-prebuilt');
       
-      // Get environment variables
-      const appId = process.env.NEXT_PUBLIC_ZEGOCLOUD_APP_ID;
-      const serverSecret = process.env.NEXT_PUBLIC_ZEGOCLOUD_SERVER_SECRET;
-      
-      if (!appId || !serverSecret) {
-        throw new Error('Missing Zego credentials. Please check environment variables.');
-      }
+      // Fixed credentials for debugging
+      const appId = 590734423;
+      const serverSecret = '9b92f1d1da600af4850baa4a29b60ec0';
       
       // Generate a unique user ID
       const userId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
       
       // Generate token
       const token = ZegoUIKitPrebuilt.generateKitTokenForTest(
-        parseInt(appId), 
-        serverSecret, 
-        roomId, 
-        userId, 
-        userName
+        appId, serverSecret, roomId, userId, userName
       );
       
       // Create instance
       const zegoInstance = ZegoUIKitPrebuilt.create(token);
-      
-      if (!containerRef.current) {
-        throw new Error('Video container not found');
-      }
       
       // Configure the room
       const config = {
@@ -133,14 +102,9 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
         onJoinRoom: () => {
           console.log('[VideoChat] Successfully joined room');
           setLoading(false);
-          setError(null);
         },
         onLeaveRoom: () => {
           console.log('[VideoChat] Left room');
-        },
-        onError: (error: any) => {
-          console.error('[VideoChat] Zego error:', error);
-          handleError(`Video chat error: ${error?.message || 'Unknown error'}`);
         }
       };
       
@@ -157,11 +121,10 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
       
       return zegoInstance;
     } catch (e) {
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-      handleError(`Failed to initialize: ${errorMessage}`);
+      handleError(`Failed to initialize: ${e}`);
       return null;
     }
-  }, [roomId, userName, role, loading, connectionAttempts, onError, loadZegoModule]);
+  }, [roomId, userName, role, loading, connectionAttempts, onError]);
 
   React.useEffect(() => {
     // Validate required props
@@ -180,18 +143,13 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
       if (mounted && loading) {
         console.log('[VideoChat] Long safety timeout triggered');
         setLoading(false);
-        handleError('Connection timed out. Please try again.');
       }
     }, 15000);
     
     // Initialize with a slight delay to ensure DOM is ready
     const initTimer = setTimeout(async () => {
       if (mounted) {
-        try {
-          zegoInstance = await initializeZego();
-        } catch (error) {
-          handleError(`Failed to initialize video chat: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        zegoInstance = await initializeZego();
       }
     }, 500);
     

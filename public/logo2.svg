@@ -1,32 +1,200 @@
-<svg width="900" height="200" viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+<svg width="100%" height="100%" viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0E6FF" />
+      <stop offset="50%" stop-color="#F8F9FF" />
+      <stop offset="100%" stop-color="#FFFFFF" />
+    </linearGradient>
+    <linearGradient id="highlightGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4361EE" />
+      <stop offset="50%" stop-color="#3A86FF" />
+      <stop offset="100%" stop-color="#4CC9F0" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F72585" />
+      <stop offset="50%" stop-color="#FF0A54" />
+      <stop offset="100%" stop-color="#FF6600" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feFlood result="flood" flood-color="#4CC9F0" flood-opacity="0.3"/>
+      <feComposite in="flood" result="mask" in2="SourceGraphic" operator="in"/>
+      <feGaussianBlur in="mask" result="blurred" stdDeviation="3"/>
+      <feMerge>
+        <feMergeNode in="blurred"/>
+        <feMergeNode in="blurred"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="sparkle" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="0" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G" result="sparkling" />
+      <feMerge>
+        <feMergeNode in="sparkling" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="bevel" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+      <feSpecularLighting in="blur" surfaceScale="5" specularConstant="0.75" 
+                          specularExponent="20" lighting-color="#FFFFFF"  
+                          result="specOut">
+        <fePointLight x="100" y="100" z="200"/>
+      </feSpecularLighting>
+      <feComposite in="specOut" in2="SourceAlpha" operator="in" result="specOut"/>
+      <feComposite in="SourceGraphic" in2="specOut" operator="arithmetic" 
+                   k1="0" k2="1" k3="1" k4="0" result="litPaint"/>
+    </filter>
+    <clipPath id="textClip">
+      <text x="50" y="145" font-family="'Segoe UI', Arial, sans-serif" font-weight="bold" font-size="80">Interview</text>
+    </clipPath>
+    <clipPath id="highlightClip">
+      <text x="400" y="145" font-family="'Segoe UI', Arial, sans-serif" font-weight="bold" font-size="80">Copilot</text>
+    </clipPath>
+  </defs>
+  
   <style>
     :root {
-      --text-color: #ffffff;
+      --text-color: url(#textGradient);
+      --highlight-color: url(#highlightGradient);
+      --accent-color: url(#accentGradient);
     }
     @media (prefers-color-scheme: light) {
       :root {
-        --text-color: #000000;
+        --text-color: #1B1A2A;
+        --highlight-color: url(#highlightGradient);
+        --accent-color: url(#accentGradient);
       }
     }
-    .shadow { fill: #888; }
+    .shadow { fill: #88888830; filter: blur(6px); }
     .white { fill: var(--text-color); }
-    .blue { fill: #1E90FF; }
-    .orange { fill: #FF6600; }
-    .font { font-family: Arial, sans-serif; font-weight: bold; }
+    .blue { fill: var(--highlight-color); }
+    .orange { fill: var(--accent-color); }
+    .font { font-family: 'Segoe UI', Arial, sans-serif; font-weight: bold; }
+    
+    @keyframes float {
+      0% { transform: translateY(0) rotate(0); }
+      25% { transform: translateY(-3px) rotate(-1deg); }
+      50% { transform: translateY(-1px) rotate(0); }
+      75% { transform: translateY(-2px) rotate(1deg); }
+      100% { transform: translateY(0) rotate(0); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.03); }
+    }
+    
+    @keyframes sparkleMove {
+      0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
+      50% { transform: translate(10px, -15px) scale(1); opacity: 1; }
+      100% { transform: translate(20px, -30px) scale(0.8); opacity: 0; }
+    }
+    
+    @keyframes orbitRight {
+      from { transform: rotate(0deg) translateX(40px) rotate(0deg); }
+      to { transform: rotate(360deg) translateX(40px) rotate(-360deg); }
+    }
+    
+    @keyframes orbitLeft {
+      from { transform: rotate(0deg) translateX(30px) rotate(0deg); }
+      to { transform: rotate(-360deg) translateX(30px) rotate(360deg); }
+    }
+    
+    @keyframes dash {
+      to { stroke-dashoffset: 0; }
+    }
+    
+    .book-icon {
+      transform-origin: center;
+      filter: url(#glow);
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .main-text {
+      filter: url(#bevel);
+    }
+    
+    .highlight-text {
+      filter: url(#neonGlow);
+    }
+    
+    .text-outline {
+      fill: none;
+      stroke: url(#highlightGradient);
+      stroke-width: 1;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: dash 5s linear forwards;
+    }
+    
+    .particle {
+      animation-duration: 5s;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+      transform-origin: center;
+    }
+    
+    .particle-right {
+      animation-name: orbitRight;
+    }
+    
+    .particle-left {
+      animation-name: orbitLeft;
+    }
+    
+    .sparkle {
+      animation: sparkleMove 4s ease-out infinite;
+    }
+    
+    .pulse {
+      animation: pulse 3s ease-in-out infinite;
+    }
   </style>
   
-  <!-- Book Icon -->
-  <g class="orange">
+  <g opacity="0.2" class="pulse">
+    <circle cx="150" cy="100" r="70" fill="url(#particleGradient1)" opacity="0.1" />
+    <circle cx="650" cy="100" r="90" fill="url(#particleGradient2)" opacity="0.1" />
+  </g>
+  
+  <g transform="translate(150, 40)">
+    <circle class="particle particle-right" cx="0" cy="0" r="5" fill="#4CC9F0" opacity="0.5" />
+    <circle class="particle particle-left" cx="0" cy="0" r="3" fill="#F72585" opacity="0.5" />
+  </g>
+  
+  <g class="sparkle" opacity="0.7">
+    <circle cx="100" cy="80" r="3" fill="#FFFFFF" />
+    <circle cx="400" cy="60" r="2" fill="#FFFFFF" />
+    <circle cx="600" cy="120" r="2.5" fill="#FFFFFF" />
+  </g>
+  
+  <g class="orange book-icon">
     <path d="M150 40 Q120 30 90 40 L100 60 Q125 50 150 60 Z"/>
     <path d="M150 40 Q180 30 210 40 L200 60 Q175 50 150 60 Z"/>
     <path d="M150 40 Q135 15 120 10 V30 Q135 25 150 40 Z"/>
     <path d="M150 40 Q165 15 180 10 V30 Q165 25 150 40 Z"/>
+    
+    <path d="M145 45 Q140 42 135 45 L137 50 Q141 48 145 50 Z" fill="#FFFFFF" opacity="0.5" />
+    <path d="M155 45 Q160 42 165 45 L163 50 Q159 48 155 50 Z" fill="#FFFFFF" opacity="0.5" />
   </g>
   
-  <!-- Text Shadow -->
-  <text x="50" y="150" class="font shadow" font-size="80">InterviewPrep</text>
+  <text x="50" y="150" class="font shadow" font-size="80">InterviewCopilot</text>
   
-  <!-- Main Text -->
-  <text x="50" y="145" class="font white" font-size="80">Interview</text>
-  <text x="400" y="145" class="font blue" font-size="80">Prep</text>
+  <path d="M50 155 Q450 175 750 155" stroke="url(#highlightGradient)" stroke-width="2" fill="none" opacity="0.3" />
+  
+  <g class="main-text">
+    <text x="50" y="145" class="font white" font-size="80" clip-path="url(#textClip)">Interview</text>
+    <text x="50" y="145" class="font text-outline" font-size="80">Interview</text>
+  </g>
+  
+  <g class="highlight-text">
+    <text x="400" y="145" class="font blue" font-size="80" clip-path="url(#highlightClip)">Copilot</text>
+    <text x="400" y="145" class="font text-outline" font-size="80">Copilot</text>
+  </g>
 </svg>

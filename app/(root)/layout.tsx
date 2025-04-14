@@ -13,15 +13,15 @@ const Rootlayout = async ({children}:{children: React.ReactNode}) => {
   
   return (
     <div className='root-layout'>
-      <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 mb-4">
+      <header className="flex items-center justify-between p-4 pt-20 md:pt-24">
         <Link href='/' className='flex items-center gap-2'>
-          <Image src='/logo2.svg' alt="logo" width={350} height={100 } />
+          <Image src='/logo2.svg' alt="logo" width={350} height={100} className="max-w-full" />
         </Link>
       </header>
       
       <Navigation />
       
-      <main className="px-4">
+      <main className="px-4 md:px-8">
         {children}
       </main>
     </div>

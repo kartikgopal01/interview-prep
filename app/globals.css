@@ -61,26 +61,24 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   
-  /* Pixel art colors for light mode */
-  --pixel-bg: #e0f2ff;
-  --pixel-primary: #4875e8;
-  --pixel-secondary: #ffd866;
-  --pixel-accent: #00cc99;
-  --pixel-border: #5a6988;
-  --pixel-dark: #333366;
-  --pixel-text: #333366;
-  --pixel-light: #ffffff;
-  --pixel-shadow: #92a8d1;
+  /* Enhanced glass morphism colors for light mode */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass-highlight: rgba(255, 255, 255, 0.35);
+  --glass-shadow: rgba(31, 38, 135, 0.1);
+  --glass-text: #1B1A2A;
+  --glass-primary: #4361EE;
+  --glass-secondary: #4CC9F0;
+  --glass-accent: #3A0CA3;
+  --glass-danger: #F72585;
+  --glass-success: #4CAF50;
+  --glass-warning: #FB8500;
+  --glass-info: #4361EE;
+  --glass-blur: 12px;
   
-  /* Extended pixel art palette */
-  --pixel-red: #ff6b6b;
-  --pixel-green: #51cf66;
-  --pixel-blue: #339af0;
-  --pixel-purple: #9775fa;
-  --pixel-pink: #f06595;
-  --pixel-yellow: #fcc419;
-  --pixel-orange: #ff922b;
-  --pixel-teal: #20c997;
+  /* Enhanced background gradients */
+  --glass-gradient-primary: linear-gradient(135deg, rgba(67, 97, 238, 0.15), rgba(67, 97, 238, 0.05));
+  --glass-gradient-secondary: linear-gradient(135deg, rgba(76, 201, 240, 0.15), rgba(76, 201, 240, 0.05));
 }
 
 .dark {
@@ -179,336 +177,278 @@
   }
 }
 
-/* Pixel art styles for light mode */
+/* Enhanced Glass morphism styles for light mode */
 :root:not(.dark) {
-  /* Global background */
-  background-color: var(--pixel-bg);
+  background-color: #f0f4ff;
+  background-image: 
+    linear-gradient(135deg, #f0f4ff 0%, #e2e6f3 100%),
+    radial-gradient(circle at 50% 0%, rgba(67, 97, 238, 0.08) 0%, transparent 50%);
   color-scheme: light;
-  --color-foreground: var(--pixel-text);
-  image-rendering: pixelated;
+  --color-foreground: var(--glass-text);
 }
 
-/* Text styling for pixel art light mode */
+/* Text styling for glass morphism light mode */
 :root:not(.dark) p,
 :root:not(.dark) li {
-  color: var(--pixel-dark);
+  color: var(--glass-text);
 }
 
-/* Heading styles for the pixel art theme */
 :root:not(.dark) h1,
 :root:not(.dark) h2,
 :root:not(.dark) h3,
 :root:not(.dark) h4,
 :root:not(.dark) h5,
 :root:not(.dark) h6 {
-  color: var(--pixel-dark);
-  font-family: 'Courier New', monospace;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  text-shadow: 2px 2px 0 var(--pixel-accent-light);
-  position: relative;
-  display: inline-block;
-}
-
-:root:not(.dark) h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-:root:not(.dark) h2 {
-  font-size: 2rem;
-  margin-bottom: 0.8rem;
-}
-
-:root:not(.dark) h3 {
-  font-size: 1.75rem;
-  margin-bottom: 0.6rem;
-}
-
-:root:not(.dark) h4 {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-/* Add pixel dot accents to headings */
-:root:not(.dark) h1::before,
-:root:not(.dark) h2::before {
-  content: "";
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background-color: var(--pixel-accent);
-  left: -12px;
-  top: 50%;
-  transform: translateY(-50%);
+  color: var(--glass-text);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 /* General card styling for all cards in light mode */
 :root:not(.dark) .card {
-  background-color: var(--pixel-light);
-  border: none;
-  border-radius: 2px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
   box-shadow: 
-    0 0 0 4px var(--pixel-border),
-    6px 6px 0 0 var(--pixel-shadow);
-  position: relative;
-  overflow: visible;
-  transition: all 0.2s ease;
+    0 4px 20px var(--glass-shadow),
+    0 1px 2px rgba(255, 255, 255, 0.5) inset;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* Card hover effect */
 :root:not(.dark) .card:hover {
-  transform: translate(2px, 2px);
   box-shadow: 
-    0 0 0 4px var(--pixel-border),
-    4px 4px 0 0 var(--pixel-shadow);
+    0 10px 30px rgba(31, 38, 135, 0.15),
+    0 1px 2px rgba(255, 255, 255, 0.5) inset;
+  transform: translateY(-5px);
 }
 
-/* Add pixel corner decorations to all cards */
-:root:not(.dark) .card::before,
-:root:not(.dark) .card::after,
-:root:not(.dark) .card > *:first-child::before,
-:root:not(.dark) .card > *:first-child::after {
-  content: "";
-  position: absolute;
-  width: 6px;
-  height: 6px;
-  background-color: var(--pixel-accent);
-  z-index: 2;
-}
-
-:root:not(.dark) .card::before {
-  top: -3px;
-  left: -3px;
-}
-
-:root:not(.dark) .card::after {
-  top: -3px;
-  right: -3px;
-}
-
-:root:not(.dark) .card > *:first-child::before {
-  bottom: -3px;
-  left: -3px;
-}
-
-:root:not(.dark) .card > *:first-child::after {
-  bottom: -3px;
-  right: -3px;
-}
-
-/* Special styling for the call to action card */
-:root:not(.dark) .card-cta {
-  background-color: var(--pixel-light);
-  border: none;
-  box-shadow: 
-    0 0 0 4px var(--pixel-primary),
-    8px 8px 0 0 var(--pixel-shadow);
-  border-radius: 2px;
-  position: relative;
-  overflow: visible;
-  transition: all 0.2s ease;
-}
-
-:root:not(.dark) .card-cta:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 
-    0 0 0 4px var(--pixel-primary),
-    6px 6px 0 0 var(--pixel-shadow);
-}
-
-/* Add pattern background to cards */
-:root:not(.dark) .card-cta::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    linear-gradient(45deg, 
-      transparent 95%, 
-      var(--pixel-accent) 95%, 
-      var(--pixel-accent) 100%),
-    linear-gradient(-45deg, 
-      transparent 95%, 
-      var(--pixel-accent) 95%, 
-      var(--pixel-accent) 100%);
-  background-size: 10px 10px;
-  opacity: 0.1;
-  pointer-events: none;
-}
-
-/* Button styling for pixel art light mode */
+/* Button styling for light mode */
 :root:not(.dark) .btn-primary,
 :root:not(.dark) .btn-secondary,
 :root:not(.dark) .btn-upload,
 :root:not(.dark) .form .input {
-  border-radius: 2px;
-  transition: all 0.2s ease;
-  transform: translate(-2px, -2px);
-  border: none;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
   box-shadow: 
-    0 0 0 3px var(--pixel-border),
-    4px 4px 0 0 var(--pixel-shadow);
+    0 4px 10px rgba(0, 0, 0, 0.05),
+    0 1px 1px rgba(255, 255, 255, 0.7) inset;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 :root:not(.dark) .btn-primary {
-  background-color: var(--pixel-primary);
+  background: linear-gradient(135deg, var(--glass-primary), #3a56e4);
   color: white;
-  font-weight: 600;
-  font-family: 'Courier New', monospace;
+  font-weight: 500;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.02em;
 }
 
 :root:not(.dark) .btn-secondary {
-  background-color: var(--pixel-secondary);
-  color: var(--pixel-dark);
-  font-family: 'Courier New', monospace;
+  background: linear-gradient(135deg, rgba(76, 201, 240, 0.9), rgba(67, 97, 238, 0.8));
+  color: white;
+  font-weight: 500;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
 :root:not(.dark) .btn-primary:hover,
 :root:not(.dark) .btn-secondary:hover,
 :root:not(.dark) .btn-upload:hover {
-  transform: translate(0, 0);
+  transform: translateY(-3px);
   box-shadow: 
-    0 0 0 3px var(--pixel-border),
-    0 0 0 0 var(--pixel-shadow);
+    0 8px 20px rgba(0, 0, 0, 0.15),
+    0 1px 1px rgba(255, 255, 255, 0.7) inset;
 }
 
 /* Call to action buttons */
 :root:not(.dark) .btn-call {
-  border: none;
+  background: linear-gradient(135deg, var(--glass-success), #3d9e40);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(76, 175, 80, 0.3);
   box-shadow: 
-    0 0 0 3px #359c38,
-    4px 4px 0 0 #26722a;
-  border-radius: 2px;
+    0 4px 15px rgba(76, 175, 80, 0.3),
+    0 1px 2px rgba(255, 255, 255, 0.5) inset;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 :root:not(.dark) .btn-disconnect {
-  border: none;
+  background: linear-gradient(135deg, var(--glass-danger), #e31b6d);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(247, 37, 133, 0.3);
   box-shadow: 
-    0 0 0 3px #b03636,
-    4px 4px 0 0 #7e2727;
-  border-radius: 2px;
+    0 4px 15px rgba(247, 37, 133, 0.3),
+    0 1px 2px rgba(255, 255, 255, 0.3) inset;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 /* Navigation styling */
 :root:not(.dark) nav {
-  background-color: var(--pixel-light);
-  border-bottom: 4px solid var(--pixel-border);
-  box-shadow: 0 4px 0 var(--pixel-shadow);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 4px 20px rgba(31, 38, 135, 0.1);
 }
 
-/* Text colors for readability */
-:root:not(.dark) .transcript-border p {
-  color: var(--pixel-text);
-  font-family: 'Courier New', monospace;
-}
-
-:root:not(.dark) .badge-text {
-  color: var(--pixel-dark);
-  font-weight: 600;
-  background-color: var(--pixel-secondary);
-  border: none;
-  box-shadow: 
-    0 0 0 2px var(--pixel-border),
-    2px 2px 0 0 var(--pixel-shadow);
-  border-radius: 2px;
-  padding: 3px 8px;
-  font-family: 'Courier New', monospace;
-  position: relative;
-  display: inline-block;
-}
-
-/* The "Start an Interview" button */
-:root:not(.dark) a[href*="interview"] {
-  color: var(--pixel-blue);
-  transition: all 0.2s ease;
-  border: none;
-  font-family: 'Courier New', monospace;
-  transform: translate(-2px, -2px);
-}
-
-:root:not(.dark) a[href*="interview"]:hover {
-  transform: translate(0, 0);
-  box-shadow: 
-    0 0 0 3px var(--pixel-border),
-    0 0 0 0 var(--pixel-shadow);
-}
-
-/* Vector art styling for the main banner in light mode - replaced with pixel art */
+/* Card with call to action */
 :root:not(.dark) .card-cta {
-  background-color: var(--pixel-light);
-  border: none;
+  background: var(--glass-gradient-primary);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
   box-shadow: 
-    0 0 0 4px var(--pixel-border),
-    8px 8px 0 0 var(--pixel-shadow);
-  border-radius: 2px;
+    0 10px 30px rgba(67, 97, 238, 0.15),
+    0 1px 2px rgba(255, 255, 255, 0.5) inset;
   position: relative;
-  overflow: visible;
-  transform: translate(-2px, -2px);
-  background-image: none;
-  background-gradient: none;
+  overflow: hidden;
 }
 
-/* Add pixel art decorative elements */
+:root:not(.dark) .card-cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.3) 0%, rgba(76, 201, 240, 0.2) 100%);
+  opacity: 0.5;
+  z-index: 0;
+}
+
 :root:not(.dark) .card-cta::after {
   content: '';
   position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 12px;
-  height: 12px;
-  background-color: var(--pixel-accent);
-  box-shadow: 
-    -16px 0 0 var(--pixel-accent),
-    -32px 0 0 var(--pixel-accent),
-    0 -16px 0 var(--pixel-accent),
-    -16px -16px 0 var(--pixel-accent),
-    -32px -16px 0 var(--pixel-accent);
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+  transform: rotate(30deg) translateY(100%);
+  animation: shimmer 7s infinite;
   z-index: 1;
 }
 
-/* Add pixel art decoration to interview cards */
-:root:not(.dark) .card-interview::after {
+@keyframes shimmer {
+  0% { transform: rotate(30deg) translateY(100%); }
+  15% { transform: rotate(30deg) translateY(-100%); }
+  100% { transform: rotate(30deg) translateY(-100%); }
+}
+
+:root:not(.dark) .card-cta > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Interview cards */
+:root:not(.dark) .card-interview {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 
+    0 4px 20px var(--glass-shadow),
+    0 1px 2px rgba(255, 255, 255, 0.5) inset;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  color: var(--glass-text);
+  position: relative;
+  overflow: hidden;
+}
+
+:root:not(.dark) .card-interview:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 15px 30px rgba(31, 38, 135, 0.2),
+    0 1px 2px rgba(255, 255, 255, 0.5) inset;
+}
+
+:root:not(.dark) .card-interview::before {
   content: '';
   position: absolute;
-  right: 8px;
-  top: 8px;
-  width: 8px;
-  height: 8px;
-  background-color: var(--pixel-light);
-  box-shadow: 
-    -12px 0 0 var(--pixel-secondary),
-    0 12px 0 var(--pixel-secondary),
-    -12px 12px 0 var(--pixel-secondary);
-  z-index: 2;
-  display: block;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--glass-primary), var(--glass-secondary));
 }
 
-/* Add a bit of pixel art charm to badges */
-:root:not(.dark) .badge-text::before {
-  content: '▶';
-  margin-right: 4px;
-  color: var(--pixel-accent);
+/* Badge styling */
+:root:not(.dark) .badge-text {
+  background: rgba(76, 201, 240, 0.15);
+  color: var(--glass-primary);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(76, 201, 240, 0.3);
+  border-radius: 10px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: 0 2px 5px rgba(76, 201, 240, 0.1);
 }
 
-/* Pixel perfect avatar */
+/* Form inputs */
+:root:not(.dark) .form .input {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+:root:not(.dark) .form .input:focus {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+  border-color: var(--glass-primary);
+}
+
+/* Avatars */
 :root:not(.dark) .avatar {
-  border: 3px solid var(--pixel-border);
-  box-shadow: 4px 4px 0 var(--pixel-shadow);
-  background: linear-gradient(45deg, var(--pixel-light) 25%, var(--pixel-bg) 25%, var(--pixel-bg) 50%, var(--pixel-light) 50%, var(--pixel-light) 75%, var(--pixel-bg) 75%, var(--pixel-bg) 100%);
-  background-size: 8px 8px;
-  border-radius: 0;
+  border: 2px solid var(--glass-border);
+  box-shadow: 
+    0 4px 15px var(--glass-shadow),
+    0 1px 2px rgba(255, 255, 255, 0.5) inset;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(230,234,255,0.8));
 }
 
-/* Enhanced tooltips */
+/* Tooltips */
 :root:not(.dark) .tech-tooltip {
-  background-color: var(--pixel-light);
-  color: var(--pixel-dark);
-  border: 2px solid var(--pixel-border);
-  box-shadow: 3px 3px 0 var(--pixel-shadow);
-  border-radius: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--glass-text);
+  box-shadow: 0 4px 15px var(--glass-shadow);
+  padding: 0.5rem 0.75rem;
+}
+
+/* Text color overrides for inside interview cards in light mode */
+:root:not(.dark) .card-interview p,
+:root:not(.dark) .card-interview h3,
+:root:not(.dark) .card-interview h4,
+:root:not(.dark) .card-interview span:not(.badge-text) {
+  color: var(--glass-text);
+}
+
+/* Transcript styling */
+:root:not(.dark) .transcript {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px var(--glass-shadow);
+}
+
+:root:not(.dark) .transcript p {
+  color: var(--glass-text);
 }
 
 @layer components {
@@ -623,7 +563,7 @@
   }
 
   .interviews-section {
-    @apply flex flex-wrap gap-4 max-lg:flex-col w-full items-stretch;
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full;
   }
 
   .interview-text {
@@ -632,7 +572,7 @@
 
   /* Override interview text color for light mode */
   :root:not(.dark) .interview-text {
-    @apply text-dark-100;
+    @apply text-gray-800;
   }
 
   .progress {
@@ -649,134 +589,6 @@
     .badge-text {
       @apply text-sm font-semibold capitalize;
     }
-  }
-  
-  /* Light mode override for card-interview to use white background instead of dark gradient */
-  :root:not(.dark) .card-interview {
-    @apply bg-white ;
-    background-image: none;
-    color: var(--color-dark-100);
-    border-radius: 2px;
-    box-shadow: 
-      0 0 0 4px var(--pixel-border),
-      8px 8px 0 0 var(--pixel-shadow);
-    overflow: visible;
-  }
-  
-  /* Vector art styling for the main banner in light mode */
-  :root:not(.dark) .card-cta {
-    background-color: white;
-    border: 1px solid var(--vector-border);
-    box-shadow: 0 15px 40px rgba(59, 95, 227, 0.08);
-    border-radius: 24px;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  /* Add vector art patterns to the hero card */
-  :root:not(.dark) .card-cta::before {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-image: 
-      radial-gradient(circle at 70% 30%, var(--vector-secondary) 0%, transparent 20%),
-      radial-gradient(circle at 90% 20%, var(--vector-accent) 0%, transparent 30%),
-      radial-gradient(circle at 80% 60%, var(--vector-border) 0%, transparent 20%),
-      radial-gradient(circle at 20% 80%, var(--vector-accent) 0%, transparent 15%),
-      radial-gradient(circle at 40% 10%, var(--vector-secondary) 0%, transparent 15%);
-    opacity: 0.5;
-    z-index: 0;
-  }
-  
-  /* Add decorative elements */
-  :root:not(.dark) .card-cta::after {
-    content: '';
-    position: absolute;
-    right: 10%;
-    bottom: -20px;
-    width: 80%;
-    height: 40px;
-    background: var(--vector-primary);
-    opacity: 0.05;
-    filter: blur(15px);
-    border-radius: 50%;
-    z-index: 0;
-  }
-  
-  /* Ensure content stays above the patterns */
-  :root:not(.dark) .card-cta > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  /* UI elements vector styling */
-  :root:not(.dark) .badge-text {
-    color: var(--vector-text);
-    font-weight: 600;
-    background-color: var(--vector-secondary);
-    padding: 4px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--vector-border);
-    display: inline-block;
-  }
-
-  /* Professional subtle shadows for depth */
-  :root:not(.dark) .card,
-  :root:not(.dark) .card-content,
-  :root:not(.dark) .card-interviewer,
-  :root:not(.dark) .card-border,
-  :root:not(.dark) .transcript-border,
-  :root:not(.dark) .transcript {
-    box-shadow: 
-      0 2px 4px rgba(59, 95, 227, 0.02),
-      0 8px 16px rgba(59, 95, 227, 0.04),
-      0 16px 32px rgba(59, 95, 227, 0.03);
-  }
-
-  /* Improve button styling */
-  :root:not(.dark) .btn-primary {
-    background-color: var(--vector-primary);
-    color: white;
-    font-weight: 600;
-    border: none;
-    box-shadow: 
-      0 2px 4px rgba(59, 95, 227, 0.1),
-      0 4px 8px rgba(59, 95, 227, 0.08);
-    position: relative;
-    overflow: hidden;
-  }
-
-  :root:not(.dark) .btn-primary::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-    pointer-events: none;
-  }
-
-  /* Vector style avatar */
-  :root:not(.dark) .avatar {
-    border: 2px solid white;
-    box-shadow: 0 8px 16px rgba(59, 95, 227, 0.08);
-  }
-
-  /* Enhance interview card icons */
-  :root:not(.dark) svg {
-    color: var(--vector-primary);
-  }
-
-  /* Decorative elements for cards */
-  :root:not(.dark) .tech-tooltip {
-    background-color: white;
-    color: var(--vector-text);
-    border: 1px solid var(--vector-border);
-    box-shadow: 0 4px 12px rgba(59, 95, 227, 0.06);
   }
 }
 
@@ -819,574 +631,51 @@
   }
 }
 
-/* Add pixel art background pattern */
+/* Light mode background */
 :root:not(.dark) body {
+  background-color: #f0f4ff;
   background-image: 
-    linear-gradient(0deg, transparent 9%, 
-      rgba(72, 117, 232, 0.05) 10%, rgba(72, 117, 232, 0.05) 12%, transparent 13%, transparent 29%,
-      rgba(72, 117, 232, 0.05) 30%, rgba(72, 117, 232, 0.05) 31%, transparent 32%, transparent 49%,
-      rgba(72, 117, 232, 0.05) 50%, rgba(72, 117, 232, 0.05) 51%, transparent 52%, transparent 69%,
-      rgba(72, 117, 232, 0.05) 70%, rgba(72, 117, 232, 0.05) 71%, transparent 72%, transparent 89%,
-      rgba(72, 117, 232, 0.05) 90%, rgba(72, 117, 232, 0.05) 91%, transparent 92%, transparent),
-    linear-gradient(90deg, transparent 9%, 
-      rgba(72, 117, 232, 0.05) 10%, rgba(72, 117, 232, 0.05) 12%, transparent 13%, transparent 29%,
-      rgba(72, 117, 232, 0.05) 30%, rgba(72, 117, 232, 0.05) 31%, transparent 32%, transparent 49%,
-      rgba(72, 117, 232, 0.05) 50%, rgba(72, 117, 232, 0.05) 51%, transparent 52%, transparent 69%,
-      rgba(72, 117, 232, 0.05) 70%, rgba(72, 117, 232, 0.05) 71%, transparent 72%, transparent 89%,
-      rgba(72, 117, 232, 0.05) 90%, rgba(72, 117, 232, 0.05) 91%, transparent 92%, transparent);
-  background-size: 50px 50px;
+    radial-gradient(at 40% 20%, rgba(67, 97, 238, 0.05) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(76, 201, 240, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(58, 12, 163, 0.05) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(76, 201, 240, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(67, 97, 238, 0.05) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, rgba(76, 201, 240, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, rgba(58, 12, 163, 0.05) 0px, transparent 50%);
 }
 
-/* Add pixel art border to images */
-:root:not(.dark) img {
-  image-rendering: pixelated;
-}
-
-/* Add pixelated icons */
-:root:not(.dark) svg {
-  color: var(--pixel-dark);
-  transform: scale(1.2);
-  filter: drop-shadow(1px 1px 0 var(--pixel-shadow));
-}
-
-/* Add pixel corners to cards */
-:root:not(.dark) .card::after,
-:root:not(.dark) .card-interview::after {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 8px;
-  height: 8px;
-  background-color: var(--pixel-dark);
-  box-shadow: 
-    calc(100% + 0px) 0 0 var(--pixel-dark),
-    0 calc(100% + 0px) 0 var(--pixel-dark),
-    calc(100% + 0px) calc(100% + 0px) 0 var(--pixel-dark);
-  z-index: 2;
-}
-
-/* Add chunky pixel scrollbar */
+/* Smooth scrollbar for light mode */
 :root:not(.dark) {
   scrollbar-width: thin;
-  scrollbar-color: var(--pixel-primary) var(--pixel-bg);
+  scrollbar-color: var(--glass-primary) rgba(255, 255, 255, 0.1);
 }
 
 :root:not(.dark)::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 8px;
 }
 
 :root:not(.dark)::-webkit-scrollbar-track {
-  background: var(--pixel-bg);
-  border-left: 2px solid var(--pixel-border);
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }
 
 :root:not(.dark)::-webkit-scrollbar-thumb {
-  background: var(--pixel-primary);
-  border: 2px solid var(--pixel-border);
+  background: linear-gradient(to bottom, var(--glass-primary), var(--glass-secondary));
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
 }
 
-/* Add pixel art touches to focus states */
+/* Focus states for light mode */
 :root:not(.dark) *:focus {
-  outline: 2px solid var(--pixel-accent);
+  outline: 2px solid rgba(67, 97, 238, 0.5);
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
 }
 
-/* Make sure pixel art theme works with dark theme toggle */
-:root:not(.dark) .theme-toggle {
-  border: 3px solid var(--pixel-border);
-  background-color: var(--pixel-light);
-  box-shadow: 4px 4px 0 var(--pixel-shadow);
-  border-radius: 0;
-}
-
-/* Add "pixelated" text effect */
-@layer components {
-  /* UI elements with pixel art styling */
-  :root:not(.dark) .badge-text {
-    color: var(--pixel-dark);
-    font-weight: 600;
-    background-color: var(--pixel-secondary);
-    border: 2px solid var(--pixel-border);
-    border-radius: 0;
-    padding: 4px 8px;
-    box-shadow: 2px 2px 0 var(--pixel-shadow);
-    font-family: 'Courier New', monospace;
-    letter-spacing: -0.5px;
-  }
-}
-
-/* Re-add pixel art decoration for cards */
-:root:not(.dark) .card-interview .pixel-decoration {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 8px;
-  height: 8px;
-  background-color: var(--pixel-secondary);
-  box-shadow: 
-    -12px 0 0 var(--pixel-secondary),
-    0 12px 0 var(--pixel-secondary),
-    -12px 12px 0 var(--pixel-secondary);
-  z-index: 2;
-}
-
-:root:not(.dark) .card-cta .pixel-decoration {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 12px;
-  height: 12px;
-  background-color: var(--pixel-accent);
-  box-shadow: 
-    -16px 0 0 var(--pixel-accent),
-    -32px 0 0 var(--pixel-accent),
-    0 -16px 0 var(--pixel-accent),
-    -16px -16px 0 var(--pixel-accent),
-    -32px -16px 0 var(--pixel-accent);
-  z-index: 2;
-}
-
-/* Add pixel corners to cards */
-:root:not(.dark) .card-pixel-corners::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 8px;
-  height: 8px;
-  background-color: var(--pixel-dark);
-  box-shadow: 
-    calc(100% + 0px) 0 0 var(--pixel-dark),
-    0 calc(100% + 0px) 0 var(--pixel-dark),
-    calc(100% + 0px) calc(100% + 0px) 0 var(--pixel-dark);
-  z-index: 2;
-}
-
-/* Add pixelated tech icons */
-:root:not(.dark) .interviews-section svg {
-  filter: none;
-  image-rendering: pixelated;
-  border: 2px solid var(--pixel-border);
-  padding: 2px;
-  background-color: var(--pixel-light);
-  border-radius: 0;
-}
-
-/* Fix pixel art for badge-text */
-:root:not(.dark) .badge-text {
-  color: var(--pixel-dark);
-  font-weight: 600;
-  background-color: var(--pixel-secondary);
-  border: 2px solid var(--pixel-border);
-  border-radius: 0;
-  padding: 2px 6px;
-  box-shadow: 2px 2px 0 var(--pixel-shadow);
-  font-family: 'Courier New', monospace;
-  position: relative;
-  display: inline-block;
-}
-
-/* Add 8-bit style font */
-:root:not(.dark) h1, 
-:root:not(.dark) h2, 
-:root:not(.dark) h3,
-:root:not(.dark) button,
-:root:not(.dark) a {
-  font-family: 'Courier New', monospace;
-  letter-spacing: -0.5px;
-  font-weight: bold;
-}
-
-/* Add special pixelated styling for avatar in light mode */
-:root:not(.dark) .avatar img {
-  image-rendering: pixelated;
-  filter: contrast(1.1) brightness(1.1);
-}
-
-/* Make banner robot image look pixelated */
-:root:not(.dark) .card-cta img {
-  image-rendering: pixelated;
-  filter: contrast(1.1) brightness(1.1);
-}
-
-/* Add some pixel art animation for hover effects */
-:root:not(.dark) .card-interview:hover::after {
-  animation: pixelPulse 1s infinite alternate;
-}
-
-@keyframes pixelPulse {
-  0% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-/* Fix any conflicting styles in the main card */
-:root:not(.dark) .card-cta::after {
-  content: '';
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 12px;
-  height: 12px;
-  background-color: var(--pixel-accent);
-  box-shadow: 
-    -16px 0 0 var(--pixel-accent),
-    -32px 0 0 var(--pixel-accent),
-    0 -16px 0 var(--pixel-accent),
-    -16px -16px 0 var(--pixel-accent),
-    -32px -16px 0 var(--pixel-accent);
-  z-index: 1;
-  display: block;
-}
-
-/* CRT Screen Effect */
-:root:not(.dark)::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.02) 50%
-  );
-  background-size: 100% 4px;
-  z-index: 1000;
-  pointer-events: none;
-  opacity: 0.2;
-}
-
-/* Add retro scanlines */
-:root:not(.dark)::before {
-  content: "";
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1001;
-  background-image: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.03),
-    rgba(0, 0, 0, 0.03) 1px,
-    transparent 1px,
-    transparent 2px
-  );
-}
-
-/* Game-style cursor */
-:root:not(.dark) {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Crect x='0' y='0' width='4' height='4' fill='%234875e8'/%3E%3Crect x='4' y='0' width='4' height='4' fill='%235a6988'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%235a6988'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%234875e8'/%3E%3C/svg%3E"), auto;
-}
-
-/* Interactive element hover cursor */
-:root:not(.dark) button,
-:root:not(.dark) a,
-:root:not(.dark) input,
-:root:not(.dark) select {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23ffd866'/%3E%3Crect x='4' y='0' width='4' height='4' fill='%235a6988'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%235a6988'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23ffd866'/%3E%3C/svg%3E"), pointer;
-}
-
-/* Enhanced pixelated text headings */
-:root:not(.dark) h1,
-:root:not(.dark) h2,
-:root:not(.dark) h3 {
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  text-shadow: 2px 2px 0 var(--pixel-shadow);
-  letter-spacing: 0;
-  line-height: 1.5;
-  transform: translateY(-2px);
-}
-
-/* Add retro game UI elements */
-:root:not(.dark) .card-interview,
-:root:not(.dark) .card-cta {
-  position: relative;
-}
-
-/* Add corner notches for retro game style windows */
-:root:not(.dark) .card-interview::before,
-:root:not(.dark) .card-cta::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  background-image: 
-    linear-gradient(45deg, transparent 8px, var(--pixel-border) 8px, var(--pixel-border) 10px, transparent 10px),
-    linear-gradient(-45deg, transparent 8px, var(--pixel-border) 8px, var(--pixel-border) 10px, transparent 10px),
-    linear-gradient(135deg, transparent 8px, var(--pixel-border) 8px, var(--pixel-border) 10px, transparent 10px),
-    linear-gradient(-135deg, transparent 8px, var(--pixel-border) 8px, var(--pixel-border) 10px, transparent 10px);
-  background-position: top left, top right, bottom right, bottom left;
-  background-size: 20px 20px;
-  background-repeat: no-repeat;
-  display: block;
-  z-index: 3;
-}
-
-/* Pixel animation for hover states */
+/* Add subtle hover animations */
 :root:not(.dark) .card-interview:hover,
 :root:not(.dark) .btn-primary:hover,
-:root:not(.dark) a[href*="interview"]:hover {
-  animation: pixel-shift 0.2s steps(2) forwards;
-}
-
-@keyframes pixel-shift {
-  0% {
-    transform: translate(-2px, -2px);
-  }
-  100% {
-    transform: translate(0, 0);
-  }
-}
-
-/* Digital VHS glitch effect for main card on hover */
-:root:not(.dark) .card-cta:hover::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  pointer-events: none;
-  animation: glitch 1s infinite;
-  z-index: 4;
-}
-
-@keyframes glitch {
-  0% {
-    transform: translate(0);
-  }
-  20% {
-    transform: translate(-3px, 3px);
-  }
-  40% {
-    transform: translate(-3px, -3px);
-  }
-  60% {
-    transform: translate(3px, 3px);
-  }
-  80% {
-    transform: translate(3px, -3px);
-  }
-  100% {
-    transform: translate(0);
-  }
-}
-
-/* Game UI health bar for cards */
-:root:not(.dark) .card-interview::after {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80%;
-  height: 6px;
-  background-color: var(--pixel-dark);
-  z-index: 5;
-  border: 2px solid var(--pixel-border);
-  display: block;
-}
-
-:root:not(.dark) .card-interview::after {
-  background: linear-gradient(90deg, 
-    var(--pixel-green) 0%, 
-    var(--pixel-green) 70%, 
-    var(--pixel-yellow) 70%, 
-    var(--pixel-yellow) 85%, 
-    var(--pixel-red) 85%, 
-    var(--pixel-red) 100%
-  );
-}
-
-/* Health bar animation on hover */
-:root:not(.dark) .card-interview:hover::after {
-  animation: health-pulse 2s infinite steps(4);
-}
-
-@keyframes health-pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* Enhanced button appearance */
-:root:not(.dark) .btn-primary,
-:root:not(.dark) .btn-secondary {
-  position: relative;
-  padding: 8px 16px;
-  text-transform: uppercase;
-  font-family: 'Press Start 2P', 'Courier New', monospace;
-  font-size: 0.8rem;
-  letter-spacing: 0;
-  border: 3px solid var(--pixel-border);
-}
-
-/* Retro game UI arrows */
-:root:not(.dark) .btn-primary::before,
-:root:not(.dark) .btn-secondary::before {
-  content: "►";
-  position: absolute;
-  left: 10px;
-  animation: arrow-blink 1s infinite steps(2);
-  font-size: 0.6rem;
-}
-
-@keyframes arrow-blink {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-/* Fix pixel art button paddings */
-:root:not(.dark) .btn-primary,
-:root:not(.dark) .btn-secondary,
-:root:not(.dark) a[href*="interview"] {
-  padding-left: 25px;
-}
-
-/* Pixelate ALL images */
-:root:not(.dark) img {
-  filter: contrast(1.2) brightness(1.05);
-  image-rendering: pixelated ;
-  }
-
-/* Add loading animation dots for inputs */
-:root:not(.dark) .form .input:focus::after {
-  content: '...';
-  position: absolute;
-  right: 10px;
-  animation: loading-dots 1s infinite steps(4);
-}
-
-@keyframes loading-dots {
-  0% { content: ''; }
-  25% { content: '.'; }
-  50% { content: '..'; }
-  75% { content: '...'; }
-}
-
-/* Custom scrollbar with pixelated thumb */
-:root:not(.dark)::-webkit-scrollbar-thumb {
-  background-image: 
-    repeating-linear-gradient(45deg, 
-      var(--pixel-primary) 0, 
-      var(--pixel-primary) 2px, 
-      var(--pixel-dark) 2px, 
-      var(--pixel-dark) 4px
-    );
-}
-
-/* Make theme toggle more pixelated with proper animations */
-:root:not(.dark) .theme-toggle {
-  overflow: visible;
-}
-
-:root:not(.dark) .theme-toggle::before {
-  content: '';
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 8px;
-  height: 8px;
-  background: var(--pixel-accent);
-  animation: blink 1s infinite steps(2);
-}
-
-@keyframes blink {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-/* Retro terminal text effect */
-:root:not(.dark) .transcript p,
-:root:not(.dark) .card-content p {
-  font-family: 'Courier New', monospace;
-  color: var(--pixel-dark);
-  position: relative;
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  border-right: 2px solid var(--pixel-dark);
-  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
-  max-width: 100%;
-}
-
-@keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
-}
-
-@keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: var(--pixel-dark) }
-}
-
-@keyframes pixelMove {
-  0% {
-    transform: translate(0, 0);
-  }
-  25% {
-    transform: translate(10px, 0);
-  }
-  50% {
-    transform: translate(10px, 10px);
-  }
-  75% {
-    transform: translate(0, 10px);
-  }
-  100% {
-    transform: translate(0, 0);
-  }
-}
-
-/* Light theme interview card styling - keep this */
-:root:not(.dark) .card-interview {
-  background-color: var(--pixel-light);
-  border: none;
-  box-shadow: 
-    0 0 0 4px var(--pixel-border),
-    8px 8px 0 0 var(--pixel-shadow);
-  border-radius: 2px;
-  position: relative;
-  overflow: visible;
-  transition: all 0.2s ease;
-  color: var(--pixel-dark);
-}
-
-:root:not(.dark) .card-interview:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 
-    0 0 0 4px var(--pixel-border),
-    4px 4px 0 0 var(--pixel-shadow);
-}
-
-/* Text color overrides for inside interview cards in light mode */
-:root:not(.dark) .card-interview p,
-:root:not(.dark) .card-interview h3,
-:root:not(.dark) .card-interview h4,
-:root:not(.dark) .card-interview span:not(.badge-text) {
-  color: var(--color-dark-100);
+:root:not(.dark) .btn-secondary:hover,
+:root:not(.dark) a:hover {
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }

@@ -257,7 +257,7 @@ export async function POST(req: NextRequest) {
     if (normalizedAction === 'generate-questions') {
       try {
         const { text: questionsJson } = await generateText({
-          model: groq('llama-3.2-11b-vision-preview'),  // Use updated model
+          model: groq('llama3-70b-8192'),  // Use updated model
           prompt: `
             Generate 5 technical interview questions for a ${level} ${role} position. 
             The candidate should know these technologies: ${techstack.join(', ')}.
@@ -341,7 +341,7 @@ export async function POST(req: NextRequest) {
         }
         
         const { text: evaluation } = await generateText({
-          model: groq('llama-3.2-11b-vision-preview'),  // Updated model
+          model: groq('llama3-70b-8192'),  // Updated model
           prompt: promptText,
           temperature: 0.7,
         });
@@ -426,7 +426,7 @@ export async function POST(req: NextRequest) {
         `;
         
         const { text: feedback } = await generateText({
-          model: groq('llama-3.2-11b-vision-preview'),  // Updated model
+          model: groq('llama3-70b-8192'),  // Updated model
           prompt: promptText,
           temperature: 0.7,
         });
@@ -502,7 +502,7 @@ export async function POST(req: NextRequest) {
         `;
         
         const { text: suggestionsText } = await generateText({
-          model: groq('llama-3.2-11b-vision-preview'),
+          model: groq('llama3-70b-8192'),
           prompt: promptText,
           temperature: 0.7,
         });

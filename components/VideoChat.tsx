@@ -3,44 +3,96 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from './ui/button';
 
-// Simple in-memory "signaling" for demo purposes
-// In a real app, you'd use a real signaling server
-const localSignaling = {
-  offers: new Map<string, { offer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[] }>(),
-  answers: new Map<string, { answer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[] }>(),
-  
-  // Store offer for a specific room
-  setOffer: (roomId: string, offer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[]) => {
-    localSignaling.offers.set(roomId, { offer, candidates });
+// Cross-browser and cross-device signaling using localStorage
+const browserSignaling = {
+  // Store data in localStorage with timestamps to handle race conditions
+  storeData: (key: string, data: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+      // Also dispatch a storage event to notify other tabs/windows
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {
+      console.error('Error storing data in localStorage:', e);
+    }
   },
-  
+
+  // Get data from localStorage
+  getData: (key: string) => {
+    try {
+      const item = localStorage.getItem(key);
+      if (!item) return null;
+      return JSON.parse(item).data;
+    } catch (e) {
+      console.error('Error getting data from localStorage:', e);
+      return null;
+    }
+  },
+
+  // Set offer for a specific room
+  setOffer: (roomId: string, offer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[]) => {
+    browserSignaling.storeData(`rtc-offer-${roomId}`, { offer, candidates });
+  },
+
   // Get offer for a specific room
   getOffer: (roomId: string) => {
-    return localSignaling.offers.get(roomId);
+    return browserSignaling.getData(`rtc-offer-${roomId}`);
   },
-  
-  // Store answer for a specific room
+
+  // Set answer for a specific room
   setAnswer: (roomId: string, answer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[]) => {
-    localSignaling.answers.set(roomId, { answer, candidates });
+    browserSignaling.storeData(`rtc-answer-${roomId}`, { answer, candidates });
   },
-  
+
   // Get answer for a specific room
   getAnswer: (roomId: string) => {
-    return localSignaling.answers.get(roomId);
+    return browserSignaling.getData(`rtc-answer-${roomId}`);
   },
-  
-  // Check periodically for new data
+
+  // Watch for changes in localStorage
   watchForChanges: (roomId: string, onOffer: Function, onAnswer: Function) => {
-    const interval = setInterval(() => {
-      if (localSignaling.offers.has(roomId)) {
-        onOffer(localSignaling.offers.get(roomId));
+    // Initial check
+    const offerData = browserSignaling.getOffer(roomId);
+    if (offerData) {
+      onOffer(offerData);
+    }
+
+    const answerData = browserSignaling.getAnswer(roomId);
+    if (answerData) {
+      onAnswer(answerData);
+    }
+
+    // Set up listeners for storage events (works across tabs)
+    const handleStorageChange = () => {
+      const newOfferData = browserSignaling.getOffer(roomId);
+      if (newOfferData) {
+        onOffer(newOfferData);
       }
-      if (localSignaling.answers.has(roomId)) {
-        onAnswer(localSignaling.answers.get(roomId));
+
+      const newAnswerData = browserSignaling.getAnswer(roomId);
+      if (newAnswerData) {
+        onAnswer(newAnswerData);
       }
-    }, 1000);
+    };
+
+    // Listen for storage events
+    window.addEventListener('storage', handleStorageChange);
     
-    return () => clearInterval(interval);
+    // Also set up a polling mechanism for cross-device communication
+    const pollInterval = setInterval(handleStorageChange, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(pollInterval);
+    };
+  },
+
+  // Clear data for a room
+  clearRoom: (roomId: string) => {
+    localStorage.removeItem(`rtc-offer-${roomId}`);
+    localStorage.removeItem(`rtc-answer-${roomId}`);
   }
 };
 
@@ -51,7 +103,7 @@ interface VideoChatProps {
   onError?: (errorMessage: string) => void;
 }
 
-// Simple direct WebRTC implementation
+// Simple direct WebRTC implementation with cross-device support
 const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -133,6 +185,11 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
           urls: 'turn:openrelay.metered.ca:443',
           username: 'openrelayproject',
           credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
+          username: 'webrtc',
+          credential: 'webrtc'
         }
       ]
     };
@@ -191,12 +248,12 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
         
         // If we're the interviewer, update the offer with new candidates
         if (role === 'interviewer' && peerConnection.localDescription) {
-          localSignaling.setOffer(roomId, peerConnection.localDescription, iceCandidatesRef.current);
+          browserSignaling.setOffer(roomId, peerConnection.localDescription, iceCandidatesRef.current);
         }
         
         // If we're the interviewee, update the answer with new candidates
         if (role === 'interviewee' && peerConnection.localDescription) {
-          localSignaling.setAnswer(roomId, peerConnection.localDescription, iceCandidatesRef.current);
+          browserSignaling.setAnswer(roomId, peerConnection.localDescription, iceCandidatesRef.current);
         }
       }
     };
@@ -222,12 +279,15 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
     if (!peerConnectionRef.current) return;
     
     try {
-      const offer = await peerConnectionRef.current.createOffer();
+      const offer = await peerConnectionRef.current.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
       await peerConnectionRef.current.setLocalDescription(offer);
       console.log('[PeerConnection] Offer created:', offer);
       
-      // Store offer in local signaling
-      localSignaling.setOffer(roomId, offer, iceCandidatesRef.current);
+      // Store offer in browser signaling
+      browserSignaling.setOffer(roomId, offer, iceCandidatesRef.current);
     } catch (err) {
       console.error('[PeerConnection] Error creating offer:', err);
     }
@@ -238,12 +298,13 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
     if (!peerConnectionRef.current) return;
     
     try {
-      await peerConnectionRef.current.setRemoteDescription(offerData.offer);
+      console.log('[PeerConnection] Setting remote description from offer');
+      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offerData.offer));
       
       // Add any stored ICE candidates
       for (const candidate of offerData.candidates) {
         try {
-          await peerConnectionRef.current.addIceCandidate(candidate);
+          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (e) {
           console.error('[PeerConnection] Error adding ICE candidate:', e);
         }
@@ -253,8 +314,8 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
       await peerConnectionRef.current.setLocalDescription(answer);
       console.log('[PeerConnection] Answer created:', answer);
       
-      // Store answer in local signaling
-      localSignaling.setAnswer(roomId, answer, iceCandidatesRef.current);
+      // Store answer in browser signaling
+      browserSignaling.setAnswer(roomId, answer, iceCandidatesRef.current);
     } catch (err) {
       console.error('[PeerConnection] Error creating answer:', err);
     }
@@ -265,12 +326,13 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
     if (!peerConnectionRef.current) return;
     
     try {
-      await peerConnectionRef.current.setRemoteDescription(answerData.answer);
+      console.log('[PeerConnection] Setting remote description from answer');
+      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answerData.answer));
       
       // Add any stored ICE candidates
       for (const candidate of answerData.candidates) {
         try {
-          await peerConnectionRef.current.addIceCandidate(candidate);
+          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (e) {
           console.error('[PeerConnection] Error adding ICE candidate:', e);
         }
@@ -300,17 +362,19 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
     setupPeerConnection(stream);
     
     // Set up signaling
-    const cleanup = localSignaling.watchForChanges(
+    const cleanup = browserSignaling.watchForChanges(
       roomId,
       // On offer received (for interviewee)
       (offerData: any) => {
         if (role === 'interviewee' && peerConnectionRef.current) {
+          console.log('[VideoChat] Received offer, creating answer');
           createAnswer(offerData);
         }
       },
       // On answer received (for interviewer)
       (answerData: any) => {
         if (role === 'interviewer' && peerConnectionRef.current) {
+          console.log('[VideoChat] Received answer, completing connection');
           completeConnection(answerData);
         }
       }
@@ -319,6 +383,7 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
     // Create offer if interviewer
     if (role === 'interviewer') {
       setTimeout(() => {
+        console.log('[VideoChat] Creating offer');
         createOffer();
       }, 1000);
     }
@@ -423,8 +488,20 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
   const handleRetry = () => {
     setLoading(true);
     setError(null);
+    // Clear existing signaling data
+    browserSignaling.clearRoom(roomId);
     initializeWebRTC();
   };
+  
+  // Clear room data when component unmounts
+  useEffect(() => {
+    return () => {
+      // Only clear if we're the interviewer to avoid race conditions
+      if (role === 'interviewer') {
+        browserSignaling.clearRoom(roomId);
+      }
+    };
+  }, [roomId, role]);
   
   // Initialize on component mount
   useEffect(() => {
@@ -573,4 +650,4 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
   );
 };
 
-export default VideoChat; 
+export default VideoChat;   

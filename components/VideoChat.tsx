@@ -1,100 +1,20 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import * as React from 'react';
 import { Button } from './ui/button';
 
-// Cross-browser and cross-device signaling using localStorage
-const browserSignaling = {
-  // Store data in localStorage with timestamps to handle race conditions
-  storeData: (key: string, data: any) => {
-    try {
-      localStorage.setItem(key, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }));
-      // Also dispatch a storage event to notify other tabs/windows
-      window.dispatchEvent(new Event('storage'));
-    } catch (e) {
-      console.error('Error storing data in localStorage:', e);
-    }
-  },
-
-  // Get data from localStorage
-  getData: (key: string) => {
-    try {
-      const item = localStorage.getItem(key);
-      if (!item) return null;
-      return JSON.parse(item).data;
-    } catch (e) {
-      console.error('Error getting data from localStorage:', e);
-      return null;
-    }
-  },
-
-  // Set offer for a specific room
-  setOffer: (roomId: string, offer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[]) => {
-    browserSignaling.storeData(`rtc-offer-${roomId}`, { offer, candidates });
-  },
-
-  // Get offer for a specific room
-  getOffer: (roomId: string) => {
-    return browserSignaling.getData(`rtc-offer-${roomId}`);
-  },
-
-  // Set answer for a specific room
-  setAnswer: (roomId: string, answer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[]) => {
-    browserSignaling.storeData(`rtc-answer-${roomId}`, { answer, candidates });
-  },
-
-  // Get answer for a specific room
-  getAnswer: (roomId: string) => {
-    return browserSignaling.getData(`rtc-answer-${roomId}`);
-  },
-
-  // Watch for changes in localStorage
-  watchForChanges: (roomId: string, onOffer: Function, onAnswer: Function) => {
-    // Initial check
-    const offerData = browserSignaling.getOffer(roomId);
-    if (offerData) {
-      onOffer(offerData);
-    }
-
-    const answerData = browserSignaling.getAnswer(roomId);
-    if (answerData) {
-      onAnswer(answerData);
-    }
-
-    // Set up listeners for storage events (works across tabs)
-    const handleStorageChange = () => {
-      const newOfferData = browserSignaling.getOffer(roomId);
-      if (newOfferData) {
-        onOffer(newOfferData);
-      }
-
-      const newAnswerData = browserSignaling.getAnswer(roomId);
-      if (newAnswerData) {
-        onAnswer(newAnswerData);
-      }
-    };
-
-    // Listen for storage events
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also set up a polling mechanism for cross-device communication
-    const pollInterval = setInterval(handleStorageChange, 2000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(pollInterval);
-    };
-  },
-
-  // Clear data for a room
-  clearRoom: (roomId: string) => {
-    localStorage.removeItem(`rtc-offer-${roomId}`);
-    localStorage.removeItem(`rtc-answer-${roomId}`);
+// Helper function to generate random ID
+const randomID = (length: number = 8): string => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  return result;
 };
+
+// Create a global registry to track all joined rooms
+const joinedRoomRegistry = new Map();
 
 interface VideoChatProps {
   roomId: string;
@@ -103,22 +23,11 @@ interface VideoChatProps {
   onError?: (errorMessage: string) => void;
 }
 
-// Simple direct WebRTC implementation with cross-device support
 const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
-  const dataChannelRef = useRef<RTCDataChannel | null>(null);
-  const iceCandidatesRef = useRef<RTCIceCandidate[]>([]);
-  
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [connected, setConnected] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [isCameraOn, setIsCameraOn] = useState(true);
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [connectionState, setConnectionState] = useState<string>('new');
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [connectionAttempts, setConnectionAttempts] = React.useState(0);
   
   // Handle errors safely
   const handleError = (message: string) => {
@@ -128,383 +37,97 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
     if (onError) onError(message);
   };
 
-  // Cleanup function
-  const cleanupConnection = useCallback(() => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => track.stop());
-      localStreamRef.current = null;
-    }
-
-    if (dataChannelRef.current) {
-      dataChannelRef.current.close();
-      dataChannelRef.current = null;
-    }
-
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    
-    iceCandidatesRef.current = [];
-  }, []);
-
-  // Initialize local video
-  const initializeLocalVideo = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true
-      });
-      
-      localStreamRef.current = stream;
-      
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-      
-      return stream;
-    } catch (err) {
-      handleError(`Could not access camera or microphone: ${err}`);
-      return null;
-    }
-  }, []);
-
-  // Set up peer connection
-  const setupPeerConnection = useCallback((stream: MediaStream) => {
-    // ICE servers configuration
-    const configuration = {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { 
-          urls: 'turn:openrelay.metered.ca:80',
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        },
-        {
-          urls: 'turn:openrelay.metered.ca:443',
-          username: 'openrelayproject',
-          credential: 'openrelayproject'
-        },
-        {
-          urls: 'turn:turn.anyfirewall.com:443?transport=tcp',
-          username: 'webrtc',
-          credential: 'webrtc'
-        }
-      ]
-    };
-    
-    // Create peer connection
-    const peerConnection = new RTCPeerConnection(configuration);
-    peerConnectionRef.current = peerConnection;
-    
-    // Set up data channel (only for interviewer)
-    if (role === 'interviewer') {
-      const dataChannel = peerConnection.createDataChannel('chat');
-      dataChannelRef.current = dataChannel;
-      
-      dataChannel.onopen = () => {
-        console.log('[DataChannel] Connection opened');
-      };
-      
-      dataChannel.onmessage = (event) => {
-        console.log('[DataChannel] Message received:', event.data);
-      };
-    } else {
-      // Set up data channel handler (for interviewee)
-      peerConnection.ondatachannel = (event) => {
-        dataChannelRef.current = event.channel;
-        
-        event.channel.onopen = () => {
-          console.log('[DataChannel] Connection opened');
-        };
-        
-        event.channel.onmessage = (e) => {
-          console.log('[DataChannel] Message received:', e.data);
-        };
-      };
-    }
-    
-    // Add local stream to peer connection
-    stream.getTracks().forEach(track => {
-      peerConnection.addTrack(track, stream);
-    });
-    
-    // Handle incoming remote stream
-    peerConnection.ontrack = (event) => {
-      console.log('[PeerConnection] Track received');
-      if (remoteVideoRef.current && event.streams[0]) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-        setConnected(true);
-        setLoading(false);
-      }
-    };
-    
-    // Handle ICE candidates
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        console.log('[PeerConnection] New ICE candidate:', event.candidate);
-        iceCandidatesRef.current.push(event.candidate);
-        
-        // If we're the interviewer, update the offer with new candidates
-        if (role === 'interviewer' && peerConnection.localDescription) {
-          browserSignaling.setOffer(roomId, peerConnection.localDescription, iceCandidatesRef.current);
-        }
-        
-        // If we're the interviewee, update the answer with new candidates
-        if (role === 'interviewee' && peerConnection.localDescription) {
-          browserSignaling.setAnswer(roomId, peerConnection.localDescription, iceCandidatesRef.current);
-        }
-      }
-    };
-    
-    // Handle connection state changes
-    peerConnection.oniceconnectionstatechange = () => {
-      console.log('[PeerConnection] ICE State:', peerConnection.iceConnectionState);
-      setConnectionState(peerConnection.iceConnectionState);
-      
-      if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
-        setConnected(true);
-        setLoading(false);
-      } else if (peerConnection.iceConnectionState === 'failed' || peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'closed') {
-        setConnected(false);
-      }
-    };
-    
-    return peerConnection;
-  }, [role, roomId]);
-
-  // Create offer (for interviewer)
-  const createOffer = useCallback(async () => {
-    if (!peerConnectionRef.current) return;
-    
-    try {
-      const offer = await peerConnectionRef.current.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      });
-      await peerConnectionRef.current.setLocalDescription(offer);
-      console.log('[PeerConnection] Offer created:', offer);
-      
-      // Store offer in browser signaling
-      browserSignaling.setOffer(roomId, offer, iceCandidatesRef.current);
-    } catch (err) {
-      console.error('[PeerConnection] Error creating offer:', err);
-    }
-  }, [roomId]);
-
-  // Create answer (for interviewee)
-  const createAnswer = useCallback(async (offerData: { offer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[] }) => {
-    if (!peerConnectionRef.current) return;
-    
-    try {
-      console.log('[PeerConnection] Setting remote description from offer');
-      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offerData.offer));
-      
-      // Add any stored ICE candidates
-      for (const candidate of offerData.candidates) {
-        try {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.error('[PeerConnection] Error adding ICE candidate:', e);
-        }
-      }
-      
-      const answer = await peerConnectionRef.current.createAnswer();
-      await peerConnectionRef.current.setLocalDescription(answer);
-      console.log('[PeerConnection] Answer created:', answer);
-      
-      // Store answer in browser signaling
-      browserSignaling.setAnswer(roomId, answer, iceCandidatesRef.current);
-    } catch (err) {
-      console.error('[PeerConnection] Error creating answer:', err);
-    }
-  }, [roomId]);
-
-  // Complete connection (for interviewer)
-  const completeConnection = useCallback(async (answerData: { answer: RTCSessionDescriptionInit, candidates: RTCIceCandidate[] }) => {
-    if (!peerConnectionRef.current) return;
-    
-    try {
-      console.log('[PeerConnection] Setting remote description from answer');
-      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answerData.answer));
-      
-      // Add any stored ICE candidates
-      for (const candidate of answerData.candidates) {
-        try {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
-          console.error('[PeerConnection] Error adding ICE candidate:', e);
-        }
-      }
-      
-      console.log('[PeerConnection] Connection established');
-    } catch (err) {
-      console.error('[PeerConnection] Error completing connection:', err);
-    }
-  }, []);
-
-  // Initialize WebRTC
-  const initializeWebRTC = useCallback(async () => {
-    setLoading(true);
-    cleanupConnection();
-    
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.RTCPeerConnection) {
-      handleError('Your browser does not support WebRTC');
-      return;
-    }
-    
-    // Get local media stream
-    const stream = await initializeLocalVideo();
-    if (!stream) return;
-    
-    // Set up peer connection
-    setupPeerConnection(stream);
-    
-    // Set up signaling
-    const cleanup = browserSignaling.watchForChanges(
-      roomId,
-      // On offer received (for interviewee)
-      (offerData: any) => {
-        if (role === 'interviewee' && peerConnectionRef.current) {
-          console.log('[VideoChat] Received offer, creating answer');
-          createAnswer(offerData);
-        }
-      },
-      // On answer received (for interviewer)
-      (answerData: any) => {
-        if (role === 'interviewer' && peerConnectionRef.current) {
-          console.log('[VideoChat] Received answer, completing connection');
-          completeConnection(answerData);
-        }
-      }
-    );
-    
-    // Create offer if interviewer
-    if (role === 'interviewer') {
-      setTimeout(() => {
-        console.log('[VideoChat] Creating offer');
-        createOffer();
-      }, 1000);
-    }
-    
-    return cleanup;
-  }, [cleanupConnection, initializeLocalVideo, setupPeerConnection, role, roomId, createOffer, createAnswer, completeConnection]);
-
-  // Toggle camera
-  const toggleCamera = () => {
-    if (localStreamRef.current) {
-      const videoTrack = localStreamRef.current.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        setIsCameraOn(videoTrack.enabled);
-      }
-    }
-  };
-  
-  // Toggle microphone
-  const toggleMicrophone = () => {
-    if (localStreamRef.current) {
-      const audioTrack = localStreamRef.current.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        setIsMicOn(audioTrack.enabled);
-      }
-    }
-  };
-  
-  // Share screen
-  const shareScreen = async () => {
-    if (!peerConnectionRef.current || isScreenSharing) return;
-    
-    try {
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ 
-        video: true,
-        audio: true
-      });
-      
-      const videoTrack = screenStream.getVideoTracks()[0];
-      
-      if (localStreamRef.current) {
-        // Store the original video track to restore later
-        const originalVideoTrack = localStreamRef.current.getVideoTracks()[0];
-        
-        // Replace the video track in the RTCPeerConnection
-        const senders = peerConnectionRef.current.getSenders();
-        const sender = senders.find(s => s.track && s.track.kind === 'video');
-        if (sender) {
-          sender.replaceTrack(videoTrack);
-        }
-        
-        // Update local video
-        if (localVideoRef.current) {
-          const newStream = new MediaStream();
-          localStreamRef.current.getAudioTracks().forEach(track => newStream.addTrack(track));
-          newStream.addTrack(videoTrack);
-          localVideoRef.current.srcObject = newStream;
-        }
-        
-        setIsScreenSharing(true);
-        
-        // Handle the end of screen sharing
-        videoTrack.onended = () => {
-          stopScreenSharing(originalVideoTrack);
-        };
-      }
-    } catch (e) {
-      console.error("Error sharing screen:", e);
-    }
-  };
-  
-  // Stop screen sharing
-  const stopScreenSharing = (originalVideoTrack?: MediaStreamTrack) => {
-    if (!peerConnectionRef.current || !isScreenSharing) return;
-    
-    try {
-      if (originalVideoTrack) {
-        // Replace the screen track with the original video track
-        const senders = peerConnectionRef.current.getSenders();
-        const sender = senders.find(s => s.track && s.track.kind === 'video');
-        if (sender) {
-          sender.replaceTrack(originalVideoTrack);
-        }
-        
-        // Update local video
-        if (localVideoRef.current && localStreamRef.current) {
-          const newStream = new MediaStream();
-          localStreamRef.current.getAudioTracks().forEach(track => newStream.addTrack(track));
-          newStream.addTrack(originalVideoTrack);
-          localVideoRef.current.srcObject = newStream;
-        }
-      }
-      
-      setIsScreenSharing(false);
-    } catch (e) {
-      console.error("Error stopping screen share:", e);
-    }
-  };
-  
   // Retry connection
   const handleRetry = () => {
+    console.log(`[VideoChat] Retry attempt #${connectionAttempts + 1}`);
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
+    }
     setLoading(true);
     setError(null);
-    // Clear existing signaling data
-    browserSignaling.clearRoom(roomId);
-    initializeWebRTC();
+    setConnectionAttempts(prev => prev + 1);
+    initializeZego();
   };
-  
-  // Clear room data when component unmounts
-  useEffect(() => {
-    return () => {
-      // Only clear if we're the interviewer to avoid race conditions
-      if (role === 'interviewer') {
-        browserSignaling.clearRoom(roomId);
-      }
-    };
-  }, [roomId, role]);
-  
-  // Initialize on component mount
-  useEffect(() => {
+
+  // Initialize Zego
+  const initializeZego = React.useCallback(async () => {
+    // Clear any previous content
+    if (containerRef.current) {
+      containerRef.current.innerHTML = '';
+    }
+    
+    // Track this attempt
+    const currentAttempt = connectionAttempts + 1;
+    console.log(`[VideoChat] Initialization attempt #${currentAttempt}`);
+    
+    // If too many attempts, suggest page reload
+    if (currentAttempt > 3) {
+      console.log('[VideoChat] Too many initialization attempts');
+      handleError("Multiple connection attempts failed. Please try reloading the page.");
+      return null;
+    }
+    
+    try {
+      // Import Zego SDK
+      const { ZegoUIKitPrebuilt } = await import('@zegocloud/zego-uikit-prebuilt');
+      
+      // Fixed credentials for debugging
+      const appId = 590734423;
+      const serverSecret = '9b92f1d1da600af4850baa4a29b60ec0';
+      
+      // Generate a unique user ID
+      const userId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      
+      // Generate token
+      const token = ZegoUIKitPrebuilt.generateKitTokenForTest(
+        appId, serverSecret, roomId, userId, userName
+      );
+      
+      // Create instance
+      const zegoInstance = ZegoUIKitPrebuilt.create(token);
+      
+      // Configure the room
+      const config = {
+        container: containerRef.current,
+        scenario: { mode: ZegoUIKitPrebuilt.OneONoneCall },
+        turnOnCameraWhenJoining: true,
+        turnOnMicrophoneWhenJoining: true,
+        showScreenSharingButton: true,
+        showTextChat: false,
+        showUserList: false,
+        branding: {
+          logoURL: '',
+        },
+        sharedLinks: [],
+        onJoinRoom: () => {
+          console.log('[VideoChat] Successfully joined room');
+          setLoading(false);
+        },
+        onLeaveRoom: () => {
+          console.log('[VideoChat] Left room');
+        }
+      };
+      
+      // Join room
+      zegoInstance.joinRoom(config);
+      
+      // Safety timeout in case onJoinRoom doesn't fire
+      setTimeout(() => {
+        if (loading) {
+          console.log('[VideoChat] Safety timeout triggered - setting loading to false');
+          setLoading(false);
+        }
+      }, 8000);
+      
+      return zegoInstance;
+    } catch (e) {
+      handleError(`Failed to initialize: ${e}`);
+      return null;
+    }
+  }, [roomId, userName, role, loading, connectionAttempts, onError]);
+
+  React.useEffect(() => {
+    // Validate required props
     if (!roomId || !userName) {
       handleError('Missing required parameters: roomId or userName');
       return;
@@ -512,35 +135,55 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
 
     console.log(`[VideoChat] Initializing for ${role} in room ${roomId}`);
     
-    let cleanup: (() => void) | undefined;
+    let zegoInstance: any = null;
+    let mounted = true;
+    
+    // Safety timeout to prevent infinite loading
+    const safetyTimer = setTimeout(() => {
+      if (mounted && loading) {
+        console.log('[VideoChat] Long safety timeout triggered');
+        setLoading(false);
+      }
+    }, 15000);
     
     // Initialize with a slight delay to ensure DOM is ready
     const initTimer = setTimeout(async () => {
-      const cleanupFn = await initializeWebRTC();
-      if (typeof cleanupFn === 'function') {
-        cleanup = cleanupFn;
+      if (mounted) {
+        zegoInstance = await initializeZego();
       }
-    }, 1000);
+    }, 500);
     
     // Cleanup function
     return () => {
+      console.log('[VideoChat] Component unmounting, cleaning up');
+      mounted = false;
+      clearTimeout(safetyTimer);
       clearTimeout(initTimer);
-      if (cleanup) cleanup();
-      cleanupConnection();
+      
+      // Clean up Zego instance
+      if (zegoInstance) {
+        try {
+          zegoInstance.destroy();
+        } catch (e) {
+          console.error('[VideoChat] Error during cleanup:', e);
+        }
+      }
     };
-  }, [roomId, userName, role, initializeWebRTC, cleanupConnection]);
+  }, [roomId, userName, role, initializeZego]);
   
   // Error state UI
   if (error) {
     return (
-      <div className="min-h-[400px] h-full flex items-center justify-center bg-gray-900 border border-gray-700 rounded-lg">
+      <div className="min-h-[400px] h-[600px] flex items-center justify-center bg-gray-900 border border-gray-700 rounded-lg">
         <div className="text-center p-6 max-w-md">
           <h3 className="text-red-500 text-xl mb-3">Video Connection Error</h3>
           <p className="text-white mb-4">{error}</p>
           <div className="space-y-2">
-            <Button onClick={handleRetry} className="w-full">
-              Retry Connection
-            </Button>
+            {connectionAttempts < 3 ? (
+              <Button onClick={handleRetry} className="w-full">
+                Retry Connection
+              </Button>
+            ) : null}
             <Button 
               onClick={() => window.location.reload()} 
               variant="outline" 
@@ -557,92 +200,26 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
   // Main component UI
   return (
     <div className="relative">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
-        {/* Local video */}
-        <div className="relative w-full h-auto aspect-video bg-gray-800 rounded-lg overflow-hidden">
-          <video 
-            ref={localVideoRef} 
-            autoPlay 
-            playsInline 
-            muted 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute bottom-4 left-4 text-white bg-black bg-opacity-50 px-2 py-1 rounded">
-            You ({userName}) - {role}
-          </div>
-        </div>
-        
-        {/* Remote video */}
-        <div className="relative w-full h-auto aspect-video bg-gray-800 rounded-lg overflow-hidden">
-          {connected ? (
-            <video 
-              ref={remoteVideoRef} 
-              autoPlay 
-              playsInline 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-white">Waiting for {role === "interviewer" ? "interviewee" : "interviewer"} to join room: {roomId}</p>
-            </div>
-          )}
-        </div>
+      <div 
+        ref={containerRef} 
+        className="h-[600px] border border-gray-300 dark:border-gray-700 rounded-lg"
+      >
+        {/* Zego will mount here */}
       </div>
       
-      {/* Controls */}
-      <div className="mt-4 flex flex-wrap justify-center gap-2 p-2 bg-gray-800 rounded-lg">
-        <Button
-          onClick={toggleMicrophone}
-          variant={isMicOn ? "default" : "destructive"}
-          className="flex items-center gap-2"
-        >
-          {isMicOn ? "Mute" : "Unmute"}
-        </Button>
-        
-        <Button
-          onClick={toggleCamera}
-          variant={isCameraOn ? "default" : "destructive"}
-          className="flex items-center gap-2"
-        >
-          {isCameraOn ? "Hide Camera" : "Show Camera"}
-        </Button>
-        
-        <Button
-          onClick={isScreenSharing ? () => stopScreenSharing() : shareScreen}
-          variant={isScreenSharing ? "destructive" : "outline"}
-          className="flex items-center gap-2"
-        >
-          {isScreenSharing ? "Stop Sharing" : "Share Screen"}
-        </Button>
-        
-        <Button
-          onClick={handleRetry}
-          variant="secondary"
-          className="flex items-center gap-2"
-        >
-          Reconnect
-        </Button>
-      </div>
-      
-      {/* Status info */}
-      <div className="mt-2 text-xs text-gray-500 text-center">
-        <p>
-          Room: {roomId} • Role: {role} • Connection: 
-          <span className={
-            connectionState === 'connected' || connectionState === 'completed' ? ' text-green-500' : 
-            connectionState === 'checking' ? ' text-yellow-500' : 
-            connectionState === 'failed' ? ' text-red-500' : ' text-blue-500'
-          }> {connectionState}</span>
-        </p>
-      </div>
-      
-      {/* Loading overlay */}
-      {loading && !connected && (
+      {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-80 z-10 rounded-lg">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 border-t-4 border-b-4 border-blue-500 rounded-full animate-spin mb-4"></div>
             <p className="text-white mb-2">Connecting to video call...</p>
-            <p className="text-gray-300 text-sm mb-6">Waiting for {role === "interviewer" ? "interviewee" : "interviewer"} to join room: {roomId}</p>
+            <p className="text-gray-300 text-sm mb-6">This may take a few moments</p>
+            <Button 
+              onClick={handleRetry} 
+              variant="outline" 
+              className="mt-2"
+            >
+              Manual Connect
+            </Button>
           </div>
         </div>
       )}
@@ -650,4 +227,4 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
   );
 };
 
-export default VideoChat;   
+export default VideoChat; 

@@ -6,8 +6,14 @@ import { getCurrentUser } from "@/lib/actions/auth.action";
 import { getPeerInterviews, getUserPeerInterviews } from '@/lib/actions/peer-interview.action';
 import PeerInterviewCard from '@/components/PeerInterviewCard';
 import { redirect } from 'next/navigation';
+import SearchFilter from '@/components/SearchFilter';
+import { Suspense } from 'react';
 
-const PeerInterviewDashboard = async () => {
+type Props = {
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+const PeerInterviewDashboard = async ({ searchParams }: Props) => {
   const user = await getCurrentUser();
   
   if (!user) {
@@ -20,11 +26,54 @@ const PeerInterviewDashboard = async () => {
     getPeerInterviews(user.id) // Pass user ID to exclude their own interviews
   ]);
   
+  // Apply search and filtering
+  const searchTerm = typeof searchParams.search === 'string' 
+    ? searchParams.search.toLowerCase() 
+    : '';
+  const filterValue = typeof searchParams.filter === 'string' 
+    ? searchParams.filter 
+    : '';
+  
+  // Filter user's interviews
+  const filteredUserInterviews = userPeerInterviews?.filter(interview => {
+    // Search term matching
+    const matchesSearch = !searchTerm || 
+      interview.role?.toLowerCase().includes(searchTerm) || 
+      interview.techstack?.some(tech => tech.toLowerCase().includes(searchTerm));
+    
+    // Filter matching
+    const matchesFilter = !filterValue || interview.status === filterValue;
+    
+    return matchesSearch && matchesFilter;
+  });
+  
+  // Filter available interviews
+  const filteredAvailableInterviews = availablePeerInterviews?.filter(interview => {
+    // Search term matching
+    const matchesSearch = !searchTerm || 
+      interview.role?.toLowerCase().includes(searchTerm) || 
+      interview.techstack?.some(tech => tech.toLowerCase().includes(searchTerm));
+    
+    // For available interviews, we might use different filters
+    const matchesFilter = !filterValue || interview.level === filterValue;
+    
+    return matchesSearch && matchesFilter;
+  });
+  
   // Get statistics
   const pendingInterviews = userPeerInterviews?.filter(interview => interview.status === 'pending')?.length || 0;
   const activeInterviews = userPeerInterviews?.filter(interview => interview.status === 'active')?.length || 0;
   const completedInterviews = userPeerInterviews?.filter(interview => interview.status === 'completed')?.length || 0;
   const totalInterviews = userPeerInterviews?.length || 0;
+  
+  const filterOptions = [
+    { label: 'Pending', value: 'pending' },
+    { label: 'Active', value: 'active' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Junior', value: 'junior' },
+    { label: 'Mid-level', value: 'mid-level' },
+    { label: 'Senior', value: 'senior' }
+  ];
   
   return (
     <div className="max-w-6xl mx-auto py-4 sm:py-8 px-4 sm:px-6">
@@ -57,9 +106,17 @@ const PeerInterviewDashboard = async () => {
         </Button>
       </div>
       
+      <Suspense fallback={<div className="animate-pulse h-12 w-full bg-gray-200 dark:bg-gray-700 rounded-md"></div>}>
+        <SearchFilter 
+          filterOptions={filterOptions} 
+          baseUrl="/peer-interview/dashboard" 
+          placeholder="Search by role or technology..."
+        />
+      </Suspense>
+      
       <div className="interviews-section">
-        {userPeerInterviews && userPeerInterviews.length > 0 ? (
-          userPeerInterviews.map((interview) => (
+        {filteredUserInterviews && filteredUserInterviews.length > 0 ? (
+          filteredUserInterviews.map((interview) => (
             <PeerInterviewCard 
               key={interview.id}
               id={interview.id}
@@ -73,7 +130,11 @@ const PeerInterviewDashboard = async () => {
           ))
         ) : (
           <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-            <p className="mb-4">You haven't created any peer interviews yet.</p>
+            {searchTerm || filterValue ? (
+              <p className="mb-4">No matching interviews found. Try adjusting your search or filters.</p>
+            ) : (
+              <p className="mb-4">You haven't created any peer interviews yet.</p>
+            )}
             <Button asChild>
               <Link href="/peer-interview/create">Create Your First Interview</Link>
             </Button>
@@ -83,8 +144,8 @@ const PeerInterviewDashboard = async () => {
       
       <h3 className="text-xl font-semibold mb-6">Available to Join</h3>
       <div className="interviews-section">
-        {availablePeerInterviews && availablePeerInterviews.length > 0 ? (
-          availablePeerInterviews.map((interview) => (
+        {filteredAvailableInterviews && filteredAvailableInterviews.length > 0 ? (
+          filteredAvailableInterviews.map((interview) => (
             <PeerInterviewCard 
               key={interview.id}
               id={interview.id}
@@ -98,7 +159,11 @@ const PeerInterviewDashboard = async () => {
           ))
         ) : (
           <p className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-            There are no peer interviews available to join at the moment.
+            {searchTerm || filterValue ? (
+              "No matching interviews available. Try adjusting your search or filters."
+            ) : (
+              "There are no peer interviews available to join at the moment."
+            )}
           </p>
         )}
       </div>

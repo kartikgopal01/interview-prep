@@ -45,6 +45,7 @@ interface InterviewCardProps {
   type: string;
   techstack: string[];
   createdAt?: string;
+  finalized?: boolean;
 }
 
 interface AgentProps {

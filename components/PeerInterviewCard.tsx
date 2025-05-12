@@ -4,6 +4,7 @@ import { getRandomInterviewCover } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import DisplayTechIcons from "@/components/DisplayTechIcons";
+import DeleteInterviewButton from '@/components/DeleteInterviewButton';
 
 interface PeerInterviewCardProps {
   id: string;
@@ -55,18 +56,24 @@ const PeerInterviewCard = ({ id, role, level, techstack, createdAt, status, isCr
 
   return (
     <div className="card-border w-[360px] max-sm:w-full min-h-96">
-      <div className="card-interview">
-        <div>
-          <div className="absolute top-0 right-0 w-fit px-4 py-2 rounded-bl-lg bg-light-600">
-            <p className="badge-text">Peer Interview</p>
+      <div className="card-interview relative">
+        <div className="absolute top-0 right-0 w-fit px-4 py-2 rounded-bl-lg bg-light-600">
+          <p className="badge-text">Peer Interview</p>
+        </div>
+        
+        {isCreator && (
+          <div className="absolute top-2 left-2">
+            <DeleteInterviewButton interviewId={id} />
           </div>
+        )}
 
+        <div>
           <Image 
             src={getRandomInterviewCover()} 
             alt="cover image" 
             width={90} 
             height={90} 
-            className="rounded-full object-fit size-[90px]" 
+            className="rounded-full object-fit size-[90px] mt-4" 
           />
 
           <h3 className="mt-5 capitalize">
@@ -94,7 +101,7 @@ const PeerInterviewCard = ({ id, role, level, techstack, createdAt, status, isCr
           </p>
         </div>
 
-        <div className="flex flex-row justify-between">
+        <div className="flex flex-row justify-between mt-4">
           <DisplayTechIcons techStack={techstack} />
 
           <Button className="btn-primary" disabled={!isCreator && !isAvailable}>

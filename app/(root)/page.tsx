@@ -5,14 +5,8 @@ import Image from "next/image";
 import InterviewCard from "@/components/InterviewCard";
 import {getCurrentUser, } from "@/lib/actions/auth.action";
 import {getInterviewsByUserId, getLatestInterviews } from "@/lib/actions/general.action";
-import SearchFilter from "@/components/SearchFilter";
-import { Suspense } from 'react';
 
-type Props = {
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
-const Page = async ({ searchParams }: Props) => {
+const Page = async () => {
     const user = await getCurrentUser();
 
     const [userInterviews, latestInterviews] = await Promise.all([
@@ -20,53 +14,8 @@ const Page = async ({ searchParams }: Props) => {
         await getLatestInterviews({ userId: user?.id! })
     ]);
 
-    // Apply search and filtering
-    const searchTerm = typeof searchParams.search === 'string' 
-        ? searchParams.search.toLowerCase() 
-        : '';
-    const filterValue = typeof searchParams.filter === 'string' 
-        ? searchParams.filter 
-        : '';
-    
-    // Filter user interviews
-    const filteredUserInterviews = userInterviews?.filter(interview => {
-      // Search term matching
-      const matchesSearch = !searchTerm || 
-        (interview.role || "").toLowerCase().includes(searchTerm) || 
-        (interview.type || "").toLowerCase().includes(searchTerm);
-      
-      // Filter matching
-      const matchesFilter = !filterValue || 
-        (filterValue === 'all') || 
-        (interview.type === filterValue);
-      
-      return matchesSearch && matchesFilter;
-    });
-    
-    // Filter latest interviews
-    const filteredLatestInterviews = latestInterviews?.filter(interview => {
-      // Search term matching
-      const matchesSearch = !searchTerm || 
-        (interview.role || "").toLowerCase().includes(searchTerm) || 
-        (interview.type || "").toLowerCase().includes(searchTerm);
-      
-      // Filter matching
-      const matchesFilter = !filterValue || 
-        (filterValue === 'all') || 
-        (interview.type === filterValue);
-      
-      return matchesSearch && matchesFilter;
-    });
-
-    const hasPastInterviews = (filteredUserInterviews || []).length > 0;
-    const hasUpcomingInterviews = (filteredLatestInterviews || []).length > 0;
-    
-    const filterOptions = [
-      { label: 'Technical', value: 'technical' },
-      { label: 'Behavioral', value: 'behavioral' },
-      { label: 'System Design', value: 'system_design' },
-      { label: 'All Interviews', value: 'all' }
-    ];
+    const hasPastInterviews = userInterviews?.length > 0;
+    const hasUpcomingInterviews = latestInterviews?.length > 0;
 
     return (
         <>
@@ -78,7 +27,7 @@ const Page = async ({ searchParams }: Props) => {
                     </p>
                     
                     <Button asChild className="btn-primary max-sm:w-full">
-                        <Link href="/interview">Start an Interview</Link>
+                <Link href="/interview">Start an Interview</Link>
                     </Button>
                 </div>
 
@@ -87,31 +36,13 @@ const Page = async ({ searchParams }: Props) => {
 
             <section className="flex flex-col gap-6 mt-8">
                 <h2>Your Interviews</h2>
-                
-                <Suspense fallback={<div className="animate-pulse h-12 w-full bg-gray-200 dark:bg-gray-700 rounded-md"></div>}>
-                    <SearchFilter 
-                        filterOptions={filterOptions} 
-                        baseUrl="/" 
-                        placeholder="Search by role or interview type..."
-                    />
-                </Suspense>
 
                 <div className="interviews-section">
                     {hasPastInterviews ? (
-                        filteredUserInterviews?.map((interview) => (
-                            <InterviewCard 
-                                {...interview} 
-                                key={interview.id}
-                                userId={user?.id}
-                            />
+                        userInterviews?.map((interview) => (
+                            <InterviewCard {...interview} key={interview.id}/>
                         ))) : (
-                        <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-                            {searchTerm || filterValue ? (
-                                <p>No matching interviews found. Try adjusting your search or filters.</p>
-                            ) : (
-                                <p>You haven&apos;t taken any interviews yet</p>
-                            )}
-                        </div>
+                            <p>You haven&apos;t taken any interviews yet</p>
                     )}
                 </div>
             </section>
@@ -121,20 +52,10 @@ const Page = async ({ searchParams }: Props) => {
 
                 <div className="interviews-section">
                     {hasUpcomingInterviews ? (
-                        filteredLatestInterviews?.map((interview) => (
-                            <InterviewCard 
-                                {...interview} 
-                                key={interview.id}
-                                userId={user?.id}
-                            />
+                        latestInterviews?.map((interview) => (
+                            <InterviewCard {...interview} key={interview.id}/>
                         ))) : (
-                        <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-                            {searchTerm || filterValue ? (
-                                <p>No matching interviews found. Try adjusting your search or filters.</p>
-                            ) : (
-                                <p>There are no new interviews available</p>
-                            )}
-                        </div>
+                        <p>There are no new interviews available</p>
                     )}
                 </div>
             </section>

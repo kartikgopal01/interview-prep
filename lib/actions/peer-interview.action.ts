@@ -183,34 +183,4 @@ export async function getPeerFeedbackByInterviewId(interviewId: string): Promise
     console.error('Error getting peer feedback:', error);
     return null;
   }
-}
-
-export const deletePeerInterview = async (interviewId: string, userId: string) => {
-  try {
-    // Check if the user is the creator of the interview
-    const interview = await db
-      .collection('peer-interviews')
-      .doc(interviewId)
-      .get();
-
-    if (!interview.exists) {
-      throw new Error("Interview not found");
-    }
-
-    const interviewData = interview.data() as PeerInterview;
-    if (interviewData.userId !== userId) {
-      throw new Error("You are not authorized to delete this interview");
-    }
-
-    // Delete the interview
-    await db
-      .collection('peer-interviews')
-      .doc(interviewId)
-      .delete();
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error in deletePeerInterview:", error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
-}; 
+} 

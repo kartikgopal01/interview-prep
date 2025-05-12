@@ -5,14 +5,8 @@ import Image from "next/image";
 import {getCurrentUser} from "@/lib/actions/auth.action";
 import { getPeerInterviews, getUserPeerInterviews } from '@/lib/actions/peer-interview.action';
 import PeerInterviewCard from '@/components/PeerInterviewCard';
-import SearchFilter from '@/components/SearchFilter';
-import { Suspense } from 'react';
 
-type Props = {
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
-const PeerInterviewPage = async ({ searchParams }: Props) => {
+const PeerInterviewPage = async () => {
     const user = await getCurrentUser();
     
     if (!user) {
@@ -25,55 +19,8 @@ const PeerInterviewPage = async ({ searchParams }: Props) => {
         getPeerInterviews(user.id) // Pass user ID to exclude their own interviews
     ]);
     
-    // Apply search and filtering
-    const searchTerm = typeof searchParams.search === 'string' 
-        ? searchParams.search.toLowerCase() 
-        : '';
-    const filterValue = typeof searchParams.filter === 'string' 
-        ? searchParams.filter 
-        : '';
-    
-    // Filter user's interviews
-    const filteredUserInterviews = userPeerInterviews?.filter(interview => {
-        // Search term matching
-        const matchesSearch = !searchTerm || 
-            interview.role?.toLowerCase().includes(searchTerm) || 
-            interview.techstack?.some(tech => tech.toLowerCase().includes(searchTerm));
-        
-        // Filter matching
-        const matchesFilter = !filterValue || 
-            interview.status === filterValue || 
-            interview.level === filterValue;
-        
-        return matchesSearch && matchesFilter;
-    });
-    
-    // Filter available interviews
-    const filteredAvailableInterviews = availablePeerInterviews?.filter(interview => {
-        // Search term matching
-        const matchesSearch = !searchTerm || 
-            interview.role?.toLowerCase().includes(searchTerm) || 
-            interview.techstack?.some(tech => tech.toLowerCase().includes(searchTerm));
-        
-        // Filter matching
-        const matchesFilter = !filterValue || 
-            interview.status === filterValue || 
-            interview.level === filterValue;
-        
-        return matchesSearch && matchesFilter;
-    });
-    
-    const hasUserInterviews = filteredUserInterviews && filteredUserInterviews.length > 0;
-    const hasAvailableInterviews = filteredAvailableInterviews && filteredAvailableInterviews.length > 0;
-
-    const filterOptions = [
-        { label: 'Pending', value: 'pending' },
-        { label: 'Active', value: 'active' },
-        { label: 'Completed', value: 'completed' },
-        { label: 'Junior', value: 'junior' },
-        { label: 'Mid-level', value: 'mid-level' },
-        { label: 'Senior', value: 'senior' }
-    ];
+    const hasUserInterviews = userPeerInterviews && userPeerInterviews.length > 0;
+    const hasAvailableInterviews = availablePeerInterviews && availablePeerInterviews.length > 0;
 
     return (
         <>
@@ -94,18 +41,10 @@ const PeerInterviewPage = async ({ searchParams }: Props) => {
 
             <section className="flex flex-col gap-6 mt-8">
                 <h2>Your Peer Interviews</h2>
-                
-                <Suspense fallback={<div className="animate-pulse h-12 w-full bg-gray-200 dark:bg-gray-700 rounded-md"></div>}>
-                    <SearchFilter 
-                        filterOptions={filterOptions} 
-                        baseUrl="/peer-interview" 
-                        placeholder="Search by role or technology..."
-                    />
-                </Suspense>
 
                 <div className="interviews-section">
                     {hasUserInterviews ? (
-                        filteredUserInterviews?.map((interview) => (
+                        userPeerInterviews?.map((interview) => (
                             <PeerInterviewCard 
                                 key={interview.id}
                                 id={interview.id}
@@ -118,13 +57,7 @@ const PeerInterviewPage = async ({ searchParams }: Props) => {
                             />
                         ))
                     ) : (
-                        <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-                            {searchTerm || filterValue ? (
-                                <p>No matching interviews found. Try adjusting your search or filters.</p>
-                            ) : (
-                                <p>You haven't created any peer interviews yet.</p>
-                            )}
-                        </div>
+                        <p>You haven't created any peer interviews yet.</p>
                     )}
                 </div>
             </section>
@@ -134,7 +67,7 @@ const PeerInterviewPage = async ({ searchParams }: Props) => {
 
                 <div className="interviews-section">
                     {hasAvailableInterviews ? (
-                        filteredAvailableInterviews?.map((interview) => (
+                        availablePeerInterviews?.map((interview) => (
                             <PeerInterviewCard 
                                 key={interview.id}
                                 id={interview.id}
@@ -147,13 +80,7 @@ const PeerInterviewPage = async ({ searchParams }: Props) => {
                             />
                         ))
                     ) : (
-                        <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-                            {searchTerm || filterValue ? (
-                                <p>No matching interviews available. Try adjusting your search or filters.</p>
-                            ) : (
-                                <p>There are no peer interviews available at the moment. Create one to get started!</p>
-                            )}
-                        </div>
+                        <p>There are no peer interviews available at the moment. Create one to get started!</p>
                     )}
                 </div>
             </section>

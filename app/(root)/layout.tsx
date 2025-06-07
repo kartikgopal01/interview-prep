@@ -21,7 +21,7 @@ const Rootlayout = async ({children}:{children: React.ReactNode}) => {
           <Image src='/logo2.svg' alt="logo" width={350} height={100} className="max-w-full" />
         </Link>
         
-        {user && <UserMenu user={user} />}
+        
       </header>
       
       <Navigation />

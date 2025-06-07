@@ -97,6 +97,7 @@ const InterviewPage = async ({ searchParams }: Props) => {
                                 createdAt={interview.createdAt}
                                 userId={userId}
                                 finalized={interview.finalized}
+                                isCreator={true}
                             />
                         ))
                     ) : (

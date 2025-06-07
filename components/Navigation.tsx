@@ -30,6 +30,7 @@ const Navigation = () => {
   const navigationItems = [
     { name: 'AI Interviews', path: '/' },
     { name: 'Peer Interviews', path: '/peer-interview' },
+    { name: 'Profile', path: '/profile' },
   ];
 
   // Menu animation variants

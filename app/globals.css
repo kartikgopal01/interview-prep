@@ -219,15 +219,14 @@
 :root:not(.dark) .card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease;
 }
 
 /* Card hover effect */
 :root:not(.dark) .card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 /* Button styling for light mode */
@@ -236,8 +235,8 @@
 :root:not(.dark) .btn-upload,
 :root:not(.dark) .form .input {
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.15s ease;
 }
 
 :root:not(.dark) .btn-primary {
@@ -255,36 +254,35 @@
 :root:not(.dark) .btn-primary:hover,
 :root:not(.dark) .btn-secondary:hover,
 :root:not(.dark) .btn-upload:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Call to action buttons */
 :root:not(.dark) .btn-call {
   background: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #22c55e;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 :root:not(.dark) .btn-disconnect {
   background: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #ef4444;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 /* Navigation styling */
 :root:not(.dark) nav {
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 /* Card with call to action */
 :root:not(.dark) .card-cta {
-  background: #f1f5f9;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   position: relative;
   overflow: hidden;
 }
@@ -298,17 +296,16 @@
 :root:not(.dark) .card-interview {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.15s ease;
   color: #1e293b;
   position: relative;
   overflow: hidden;
 }
 
 :root:not(.dark) .card-interview:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 :root:not(.dark) .card-interview::before {
@@ -317,7 +314,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   background: #3b82f6;
 }
 
@@ -326,7 +323,7 @@
   background: #f1f5f9;
   color: #3b82f6;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 6px;
   padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -336,8 +333,8 @@
 :root:not(.dark) .form .input {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  border-radius: 6px;
+  transition: border-color 0.15s ease;
 }
 
 :root:not(.dark) .form .input:focus {
@@ -357,9 +354,9 @@
 :root:not(.dark) .tech-tooltip {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 4px;
   color: #1e293b;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   padding: 0.5rem 0.75rem;
 }
 
@@ -375,8 +372,8 @@
 :root:not(.dark) .transcript {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 :root:not(.dark) .transcript p {
@@ -415,12 +412,12 @@
   outline-offset: 2px;
 }
 
-/* Add subtle hover animations */
+/* Professional hover states */
 :root:not(.dark) .card-interview:hover,
 :root:not(.dark) .btn-primary:hover,
 :root:not(.dark) .btn-secondary:hover,
 :root:not(.dark) a:hover {
-  transition: all 0.2s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 @layer components {
@@ -588,17 +585,4 @@
   @apply flex items-center justify-center;
 }
 
-@utility animate-fadeIn {
-  animation: fadeIn 0.3s ease-in-out;
-}
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}

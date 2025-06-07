@@ -108,3 +108,138 @@ export async function getFeedbackByInterviewId(params: GetFeedbackByInterviewIdP
 
     return { id: feedbackDoc.id, ...feedbackDoc.data()} as Feedback;
 }
+
+export const deleteInterview = async (interviewId: string, userId: string) => {
+  try {
+    // Check if the user is the creator of the interview
+    const interview = await db
+      .collection('interviews')
+      .doc(interviewId)
+      .get();
+
+    if (!interview.exists) {
+      throw new Error("Interview not found");
+    }
+
+    const interviewData = interview.data() as Interview;
+    if (interviewData.userId !== userId) {
+      throw new Error("You are not authorized to delete this interview");
+    }
+
+    // Delete associated feedback first
+    const feedbackQuery = await db
+      .collection('feedback')
+      .where('interviewId', '==', interviewId)
+      .get();
+
+    const batch = db.batch();
+    
+    // Add feedback deletions to batch
+    feedbackQuery.docs.forEach((doc) => {
+      batch.delete(doc.ref);
+    });
+
+    // Add interview deletion to batch
+    batch.delete(db.collection('interviews').doc(interviewId));
+
+    // Execute all deletions
+    await batch.commit();
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error in deleteInterview:", error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+};
+
+export async function getUserStats(userId: string) {
+  try {
+    // Get interviews created by user
+    const createdInterviewsSnapshot = await db
+      .collection('interviews')
+      .where('userId', '==', userId)
+      .get();
+
+    // Get interviews taken by user (feedback exists for user)
+    const feedbackSnapshot = await db
+      .collection('feedback')
+      .where('userId', '==', userId)
+      .get();
+
+    // Get all interviews (to find ones user has taken)
+    const allInterviewsSnapshot = await db
+      .collection('interviews')
+      .get();
+
+    const createdInterviews = createdInterviewsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Interview[];
+    const feedbacks = feedbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Feedback[];
+    const allInterviews = allInterviewsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Interview[];
+
+    // Find interviews taken by user (has feedback)
+    const takenInterviewIds = feedbacks.map(feedback => feedback.interviewId);
+    const takenInterviews = allInterviews.filter(interview => takenInterviewIds.includes(interview.id));
+
+    // Calculate statistics
+    const totalCreatedInterviews = createdInterviews.length;
+    const totalTakenInterviews = takenInterviews.length;
+    const totalInterviews = totalTakenInterviews; // For completion rate, we care about interviews taken, not created
+    const completedInterviews = feedbacks.length; // Same as takenInterviews since feedback = completed
+    
+    const averageScore = feedbacks.length > 0 
+      ? Math.round(feedbacks.reduce((sum, feedback) => sum + feedback.totalScore, 0) / feedbacks.length)
+      : 0;
+
+    // Get best score
+    const bestScore = feedbacks.length > 0 
+      ? Math.max(...feedbacks.map(feedback => feedback.totalScore))
+      : 0;
+
+    // Count interview types for taken interviews
+    const interviewTypes = takenInterviews.reduce((acc, interview) => {
+      acc[interview.type] = (acc[interview.type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Recent activity (last 30 days) - interviews taken
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentInterviews = takenInterviews.filter(interview => 
+      new Date(interview.createdAt) > thirtyDaysAgo
+    ).length;
+
+    return {
+      totalInterviews: totalTakenInterviews, // Interviews taken by user
+      totalCreatedInterviews, // Interviews created by user (new field)
+      completedInterviews, // Always same as totalInterviews since having feedback = completed
+      averageScore,
+      bestScore,
+      interviewTypes,
+      recentInterviews,
+      improvementAreas: feedbacks.length > 0 
+        ? feedbacks[feedbacks.length - 1].areasForImprovement || []
+        : [],
+      strengths: feedbacks.length > 0 
+        ? feedbacks[feedbacks.length - 1].strengths || []
+        : []
+    };
+  } catch (error) {
+    console.error("Error getting user stats:", error);
+    return null;
+  }
+}
+
+export async function updateUserProfile(userId: string, data: { name?: string; email?: string }) {
+  try {
+    const userRef = db.collection('users').doc(userId);
+    await userRef.update({
+      ...data,
+      updatedAt: new Date().toISOString()
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}

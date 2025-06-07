@@ -103,6 +103,7 @@ const Page = async ({ searchParams }: Props) => {
                                 {...interview} 
                                 key={interview.id}
                                 userId={user?.id}
+                                isCreator={true}
                             />
                         ))) : (
                         <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
@@ -126,6 +127,7 @@ const Page = async ({ searchParams }: Props) => {
                                 {...interview} 
                                 key={interview.id}
                                 userId={user?.id}
+                                isCreator={false}
                             />
                         ))) : (
                         <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">

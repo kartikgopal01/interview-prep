@@ -98,25 +98,37 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const isSignIn = type === "sign-in";
 
   return (
-    <div className="card-border lg:min-w-[566px]">
-      <div className="flex flex-col gap-6 card py-14 px-10">
-        <div className="flex flex-row gap-2 justify-center">
-          <Image src="/logo2.svg" alt="logo" height={300} width={300} />
-        </div>
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-foreground">
+          {isSignIn ? "Welcome Back" : "Create Account"}
+        </h1>
+      </div>
 
-        <h3>Practice job interviews </h3>
+      {/* Auth Form Card */}
+      <div className="companion-card max-w-lg mx-auto">
+        {/* Logo inside form */}
+        <div className="flex justify-center mb-8">
+          <Image 
+            src="/logo2.svg" 
+            alt="InterviewPrep AI" 
+            width={300} 
+            height={300}
+          />
+        </div>
 
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="w-full space-y-6 mt-4 form"
+            className="space-y-6"
           >
             {!isSignIn && (
               <FormField
                 control={form.control}
                 name="name"
-                label="Name"
-                placeholder="Your Name"
+                label="Full Name"
+                placeholder="Enter your full name"
                 type="text"
               />
             )}
@@ -124,8 +136,8 @@ const AuthForm = ({ type }: { type: FormType }) => {
             <FormField
               control={form.control}
               name="email"
-              label="Email"
-              placeholder="Your email address"
+              label="Email Address"
+              placeholder="Enter your email address"
               type="email"
             />
 
@@ -137,21 +149,35 @@ const AuthForm = ({ type }: { type: FormType }) => {
               type="password"
             />
 
-            <Button className="btn" type="submit">
-              {isSignIn ? "Sign In" : "Create an Account"}
+            <Button 
+              className="btn-primary w-full py-3 text-lg font-semibold" 
+              type="submit"
+              disabled={form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  {isSignIn ? "Signing In..." : "Creating Account..."}
+                </div>
+              ) : (
+                isSignIn ? "Sign In" : "Create Account"
+              )}
             </Button>
           </form>
         </Form>
+      </div>
 
-        <p className="text-center">
-          {isSignIn ? "No account yet?" : "Have an account already?"}
+      {/* Footer Section */}
+      <div className="text-center">
+        <div className="text-sm text-muted-foreground">
+          {isSignIn ? "Don't have an account?" : "Already have an account?"}
           <Link
             href={!isSignIn ? "/sign-in" : "/sign-up"}
-            className="font-bold text-user-primary ml-1"
+            className="text-primary hover:text-primary/80 font-semibold ml-1 transition-colors"
           >
             {!isSignIn ? "Sign In" : "Sign Up"}
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

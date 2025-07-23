@@ -50,34 +50,38 @@ const InterviewPage = async ({ searchParams }: Props) => {
 
     return (
         <div className="max-w-6xl mx-auto space-y-8">
-            <h3 className="text-xl font-semibold">AI Interview Practice</h3>
+            <div className="text-center space-y-2">
+                <h1 className="text-4xl font-bold text-foreground">AI Interview Practice</h1>
+                <p className="text-muted-foreground text-lg">Master your interview skills with personalized AI feedback</p>
+            </div>
 
-            <div className="blue-gradient-dark rounded-3xl px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="space-y-4 max-w-lg">
-                    <h2 className="text-2xl font-bold">Practice with an AI Interviewer</h2>
-                    <p className="text-light-100">
-                        Our AI will simulate a real interview experience based on your preferences.
-                        Get instant feedback and improve your skills.
+            <div className="cta-section mx-auto">
+                <div className="space-y-4">
+                    <div className="cta-badge">
+                        🤖 AI-Powered
+                    </div>
+                    <h2 className="text-3xl font-bold">Practice with an AI Interviewer</h2>
+                    <p className="text-white/90 text-lg leading-relaxed">
+                        Our advanced AI will simulate a real interview experience based on your preferences.
+                        Get instant feedback and improve your skills with every practice session.
                     </p>
-                    <Button asChild className="btn-primary mt-2">
-                        <Link href="#generate-section">Start New Practice Interview</Link>
-                    </Button>
+                    <div className="pt-4">
+                        <Link href="#generate-section" className="btn-primary justify-center">
+                            Start New Practice Interview
+                        </Link>
                 </div>
-                <div className="w-64 h-64 relative hidden sm:block">
-                    <img 
-                        src="/robot2.png" 
-                        alt="AI Interviewer" 
-                        className="object-contain"
-                        width={240}
-                        height={240}
-                    />
                 </div>
             </div>
             
-            <div className="space-y-6">
-                <h3 className="text-xl font-semibold">Your Interview History</h3>
+            <div className="space-y-8">
+                <div className="text-center">
+                    <h3 className="text-2xl font-bold text-foreground mb-2">Your Interview History</h3>
+                    <p className="text-muted-foreground">Track your progress and review past sessions</p>
+                </div>
                 
-                <Suspense fallback={<div className="animate-pulse h-12 w-full bg-gray-200 dark:bg-gray-700 rounded-md"></div>}>
+                <Suspense fallback={
+                    <div className="animate-pulse h-12 w-full bg-muted rounded-lg"></div>
+                }>
                     <SearchFilter 
                         filterOptions={filterOptions} 
                         baseUrl="/interview" 
@@ -85,36 +89,74 @@ const InterviewPage = async ({ searchParams }: Props) => {
                     />
                 </Suspense>
                 
-                <div className="interviews-section">
+                <div className="companions-grid">
                     {filteredInterviews && filteredInterviews.length > 0 ? (
                         filteredInterviews.map((interview) => (
-                            <InterviewCard 
-                                key={interview.id}
-                                id={interview.id}
-                                role={interview.role}
-                                type={interview.type}
-                                techstack={interview.techstack}
-                                createdAt={interview.createdAt}
-                                userId={userId}
-                                finalized={interview.finalized}
-                                isCreator={true}
-                            />
+                            <div key={interview.id} className="companion-card bg-white">
+                                <div className="flex justify-between items-center">
+                                    <div className="subject-badge bg-primary text-white">
+                                        {interview.type}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {new Date(interview.createdAt).toLocaleDateString()}
+                                    </div>
+                                </div>
+
+                                <h2 className="text-2xl font-bold text-foreground">{interview.role}</h2>
+                                
+                                <div className="space-y-2">
+                                    {interview.techstack && interview.techstack.length > 0 && (
+                                        <div className="flex flex-wrap gap-1">
+                                            {interview.techstack.slice(0, 3).map((tech: string, index: number) => (
+                                                <span key={index} className="bg-cta-gold text-black text-xs px-2 py-1 rounded-full">
+                                                    {tech.trim()}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        {interview.finalized ? 'Completed' : 'In Progress'}
+                                    </div>
+                                </div>
+
+                                <Link href={`/interview/${interview.id}`} className="w-full">
+                                    <button className="btn-primary w-full justify-center">
+                                        {interview.finalized ? 'View Results' : 'Continue Interview'}
+                                    </button>
+                                </Link>
+                            </div>
                         ))
                     ) : (
-                        <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+                        <div className="companion-list text-center py-16 col-span-full">
                             {searchTerm || filterValue ? (
-                                <p>No matching interviews found. Try adjusting your search or filters.</p>
+                                <div className="space-y-4">
+                                    <div className="text-6xl">🔍</div>
+                                    <h3 className="text-xl font-semibold text-foreground">No matching interviews found</h3>
+                                    <p className="text-muted-foreground">Try adjusting your search or filters.</p>
+                                </div>
                             ) : (
-                                <p>You haven't taken any interviews yet. Start your first one below!</p>
+                                <div className="space-y-4">
+                                    <div className="text-6xl">🚀</div>
+                                    <h3 className="text-xl font-semibold text-foreground">Ready to start your interview journey?</h3>
+                                    <p className="text-muted-foreground">Create your first AI-powered interview practice session below!</p>
+                                </div>
                             )}
                         </div>
                     )}
                 </div>
             </div>
             
-            <div id="generate-section" className="mt-10 pt-8 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="text-xl font-semibold mb-6">Generate New Interview</h3>
+            <div id="generate-section" className="space-y-6 border-t border-border pt-8">
+                <div className="text-center space-y-2">
+                    <h3 className="text-2xl font-bold text-foreground">Generate New Interview</h3>
+                    <p className="text-muted-foreground">Customize your practice session</p>
+                </div>
+                <div className="companion-list">
                 <Agent userName={user?.name || ""} userId={user?.id} type="generate" />
+                </div>
             </div>
         </div>
     );

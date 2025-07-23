@@ -47,6 +47,7 @@ interface InterviewCardProps {
   createdAt?: string;
   finalized?: boolean;
   isCreator?: boolean;
+  color?: string;
 }
 
 interface AgentProps {

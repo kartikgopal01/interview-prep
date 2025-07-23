@@ -77,19 +77,43 @@ const PeerInterviewPage = async ({ searchParams }: Props) => {
 
     return (
         <>
-            <section className="card-cta">
-                <div className="flex flex-col gap-6 max-w-lg">
-                    <h2>Practice Interviews With Peers</h2>
-                    <p className="text-lg">
-                        Create a peer interview to practice with another person, or join an existing interview as an interviewer.
-                    </p>
-                    
-                    <Button asChild className="btn-primary max-sm:w-full">
-                        <Link href="/peer-interview/create">Create Peer Interview</Link>
-                    </Button>
+            <section className="cta-section mx-auto">
+                <div className="cta-badge">
+                    Peer-to-Peer Learning
                 </div>
-
-                <Image src="/robot2.png" alt="robo-dude" width={400} height={400} className="max-sm:hidden" />
+                <h2 className="text-3xl font-bold">
+                    Practice Interviews With Fellow Developers
+                </h2>
+                <p className="text-white/90 text-lg leading-relaxed">
+                    Create a peer interview to practice with another developer, or join an existing interview as an interviewer. 
+                    Get real human feedback and improve together.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+                    <Link href="/peer-interview/create" className="flex-1">
+                        <button className="btn-primary w-full justify-center gap-2">
+                            <Image src="/peer-avatar.png" alt="Create" width={20} height={20} className="rounded" />
+                            Create Interview
+                        </button>
+                    </Link>
+                    <Link href="/peer-interview/dashboard" className="flex-1">
+                        <button className="btn-primary w-full justify-center gap-2 bg-cta-gold text-black hover:bg-cta-gold/90">
+                            <Image src="/calendar.svg" alt="Dashboard" width={20} height={20} />
+                            View Dashboard
+                        </button>
+                    </Link>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-6 mt-6 text-center">
+                    <div className="space-y-2">
+                        <h3 className="font-semibold">Create & Practice</h3>
+                        <p className="text-sm text-white/80">Set up interviews & practice your skills</p>
+                    </div>
+                    <div className="space-y-2">
+                        <h3 className="font-semibold">Join & Help</h3>
+                        <p className="text-sm text-white/80">Interview others & gain experience</p>
+                    </div>
+                </div>
             </section>
 
             <section className="flex flex-col gap-6 mt-8">

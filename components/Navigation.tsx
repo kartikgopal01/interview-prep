@@ -1,235 +1,228 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import ThemeToggle from './ThemeToggle';
-import { motion, AnimatePresence } from 'framer-motion';
+'use client'
+import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { User, BarChart3, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const Navigation = () => {
-  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  
-  // Handle scroll effect
+    const [user, setUser] = useState<User | null>(null);
+    const router = useRouter();
+
+    const navItems = [
+        { href: "/", label: "Home" },
+        { href: "/interview", label: "AI Interview" },
+        { href: "/peer-interview", label: "Peer Interview" },
+        { href: "/profile", label: "Profile" }
+    ];
+
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+        // Check auth status on mount
+        fetch('/api/auth/session')
+            .then(res => res.json())
+            .then(data => {
+                if (data.user) {
+                    setUser(data.user);
+                }
+            })
+            .catch(console.error);
   }, []);
   
-  const isActive = (path: string) => {
-    if (path === '/' && pathname === '/') return true;
-    if (path !== '/' && pathname.startsWith(path)) return true;
-    return false;
-  };
-  
-  const navigationItems = [
-    { name: 'AI Interviews', path: '/' },
-    { name: 'Peer Interviews', path: '/peer-interview' },
-    { name: 'Profile', path: '/profile' },
-  ];
-
-  // Menu animation variants
-  const menuVariants = {
-    hidden: { 
-      opacity: 0,
-      y: -20,
-      clipPath: 'inset(0% 0% 100% 0%)',
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      clipPath: 'inset(0% 0% 0% 0%)',
-      transition: { 
-        type: 'spring',
-        stiffness: 300,
-        damping: 30,
-        delayChildren: 0.1,
-        staggerChildren: 0.05
-      } 
-    },
-    exit: { 
-      opacity: 0,
-      y: -10,
-      clipPath: 'inset(0% 0% 100% 0%)',
-      transition: { 
-        duration: 0.3,
-        ease: [0.43, 0.13, 0.23, 0.96]
-      }
+    const handleSignOut = async () => {
+        try {
+            // Clear session cookie
+            document.cookie = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            setUser(null);
+            router.push('/auth/sign-in');
+        } catch (error) {
+            console.error('Sign out error:', error);
     }
   };
   
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { 
-        type: 'spring',
-        stiffness: 500,
-        damping: 30
-      }
-    },
-    hover: {
-      scale: 1.05,
-      x: 5,
-      transition: { 
-        type: 'spring',
-        stiffness: 500,
-        damping: 15
-      }
-    },
-    tap: {
-      scale: 0.95
-    }
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
   };
   
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-      scrolled ? 
-        'backdrop-blur-xl bg-white/75 dark:bg-gray-900/85 shadow-lg' : 
-        'bg-transparent'
-    }`}>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center px-4 md:px-8 py-4">
-          {/* Desktop Menu */}
-          <div className="hidden md:flex gap-8">
-            {navigationItems.map((item) => (
-              <motion.div
-                key={item.path}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.5,
-                  ease: [0.43, 0.13, 0.23, 0.96] 
-                }}
-                whileHover={{ y: -2 }}
-                whileTap={{ y: 0 }}
-              >
+        <>
+            <nav className="fixed top-0 left-0 right-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm z-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <div className="flex items-center justify-between h-20">
+                        <Link href="/">
+                            <div className="flex items-center gap-2 cursor-pointer">
+                                <Image
+                                    src="/logo2.svg"
+                                    alt="Interview Prep Logo"
+                                    width={280}
+                                    height={80}
+                                    className="object-contain max-w-full h-auto"
+                                />
+                            </div>
+                        </Link>
+
+                        {/* Hamburger Menu Button */}
+                        <button 
+                            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100"
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        >
+                            <svg 
+                                className="w-5 h-5" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                            >
+                                {isMenuOpen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                )}
+                            </svg>
+                        </button>
+
+                        {/* Desktop Navigation */}
+                        <div className="hidden lg:flex items-center gap-6">
+                            {navItems.map((item) => (
                 <Link
-                  href={item.path}
-                  className={`relative px-3 py-2 text-base font-medium transition-colors ${
-                    isActive(item.path)
-                      ? 'text-blue-500'
-                      : 'text-gray-700 dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400'
-                  }`}
+                                    key={item.href}
+                                    href={item.href}
+                                    className="text-gray-700 hover:text-primary transition-colors duration-200 font-medium"
                 >
-                  {item.name}
-                  {isActive(item.path) && (
-                    <motion.div 
-                      layoutId="underline"
-                      className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500 to-cyan-400"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  )}
+                                    {item.label}
                 </Link>
-              </motion.div>
-            ))}
+                            ))}
+                            
+                            {user ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            className="relative h-10 w-10 rounded-full border-2 border-gray-200 hover:border-primary transition-all duration-200"
+                                        >
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-semibold shadow-md">
+                                                {getInitials(user.name || user.email)}
+                                            </div>
+                                            <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-64 p-2" align="end">
+                                        <DropdownMenuLabel className="font-normal">
+                                            <div className="flex flex-col space-y-1">
+                                                <p className="text-sm font-medium leading-none">
+                                                    {user.name}
+                                                </p>
+                                                <p className="text-xs leading-none text-muted-foreground">
+                                                    {user.email}
+                                                </p>
           </div>
-
-          {/* Theme Toggle */}
-          <div className="flex items-center">
-            <ThemeToggle />
-          </div>
-
-          {/* Hamburger Menu Button */}
-          <motion.button
-            className="md:hidden relative w-10 h-10 flex items-center justify-center z-20 overflow-hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="relative flex flex-col justify-center items-center w-6 h-6">
-              <motion.span 
-                className="absolute h-0.5 w-6 rounded-full bg-gray-700 dark:bg-gray-200 transform"
-                animate={{ 
-                  rotate: isMenuOpen ? 45 : 0,
-                  translateY: isMenuOpen ? 0 : -8,
-                  width: isMenuOpen ? 24 : 24
-                }}
-                transition={{ duration: 0.3, ease: [0.43, 0.13, 0.23, 0.96] }}
-              />
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        
+                                        <DropdownMenuItem className="cursor-pointer p-2" asChild>
+                                            <Link href="/profile" className="flex items-center gap-2">
+                                                <User className="h-4 w-4 text-primary" />
+                                                <span>Profile</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        
+                                        <DropdownMenuItem className="cursor-pointer p-2" asChild>
+                                            <Link href="/profile?tab=analytics" className="flex items-center gap-2">
+                                                <BarChart3 className="h-4 w-4 text-green-600" />
+                                                <span>Analytics</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        
+                                        <DropdownMenuSeparator />
               
-              <motion.span 
-                className="absolute h-0.5 w-6 rounded-full bg-gray-700 dark:bg-gray-200"
-                animate={{ 
-                  opacity: isMenuOpen ? 0 : 1,
-                  width: isMenuOpen ? 0 : 16,
-                  translateX: isMenuOpen ? 20 : 0
-                }}
-                transition={{ duration: 0.3, ease: [0.43, 0.13, 0.23, 0.96] }}
-              />
-              
-              <motion.span 
-                className="absolute h-0.5 w-6 rounded-full bg-gray-700 dark:bg-gray-200 transform"
-                animate={{ 
-                  rotate: isMenuOpen ? -45 : 0,
-                  translateY: isMenuOpen ? 0 : 8,
-                  width: isMenuOpen ? 24 : 20
-                }}
-                transition={{ duration: 0.3, ease: [0.43, 0.13, 0.23, 0.96] }}
-              />
+                                        <DropdownMenuItem 
+                                            className="cursor-pointer p-2 text-red-600 focus:bg-red-50"
+                                            onClick={handleSignOut}
+                                        >
+                                            <div className="flex items-center gap-2 w-full">
+                                                <LogOut className="h-4 w-4" />
+                                                <span>Sign Out</span>
+                                            </div>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : (
+                                <Link href="/auth/sign-in">
+                                    <Button className="btn-primary">
+                                        Sign In
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
             </div>
-          </motion.button>
         </div>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
+                {/* Mobile Navigation */}
           {isMenuOpen && (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              variants={menuVariants}
-              className="md:hidden backdrop-blur-xl bg-white/90 dark:bg-gray-900/95 rounded-b-3xl overflow-hidden fixed left-0 right-0 top-[60px] border-t border-gray-200/20 dark:border-gray-700/20 shadow-2xl"
-            >
-              <motion.div 
-                className="flex flex-col py-6 px-8 space-y-5 relative z-10"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                {navigationItems.map((item) => (
-                  <motion.div
-                    key={item.path}
-                    variants={itemVariants}
-                    whileHover="hover"
-                    whileTap="tap"
-                  >
+                    <div className="lg:hidden border-t border-gray-200 bg-white/95 backdrop-blur-md">
+                        <div className="px-4 py-3 space-y-3">
+                            {navItems.map((item) => (
                     <Link
-                      href={item.path}
-                      className={`block py-3 px-5 rounded-xl transition-all ${
-                        isActive(item.path)
-                          ? 'text-white bg-gradient-to-r from-blue-500 to-cyan-400 shadow-md shadow-blue-500/20'
-                          : 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                      }`}
+                                    key={item.href}
+                                    href={item.href}
+                                    className="block text-gray-700 hover:text-primary transition-colors duration-200 font-medium py-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      {item.name}
+                                    {item.label}
                     </Link>
-                  </motion.div>
-                ))}
-              </motion.div>
-              
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-purple-500/5 rounded-full blur-3xl -z-10 transform translate-x-1/2 -translate-y-1/2"></div>
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-cyan-400/10 to-blue-500/5 rounded-full blur-2xl -z-10 transform -translate-x-1/2 translate-y-1/2"></div>
-            </motion.div>
+                            ))}
+                            
+                            {user ? (
+                                <div className="pt-2 border-t border-gray-100 space-y-2">
+                                    <div className="flex items-center gap-3 px-2 py-2">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-white text-sm font-semibold">
+                                            {getInitials(user.name || user.email)}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">{user.name}</p>
+                                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                                        </div>
+                                    </div>
+                                    <Link 
+                                        href="/profile" 
+                                        className="block px-2 py-2 text-gray-700 hover:text-primary"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Profile
+                                    </Link>
+                                    <button 
+                                        onClick={() => {
+                                            handleSignOut();
+                                            setIsMenuOpen(false);
+                                        }}
+                                        className="block w-full text-left px-2 py-2 text-red-600 hover:bg-red-50"
+                                    >
+                                        Sign Out
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="pt-2 border-t border-gray-100">
+                                    <Link href="/auth/sign-in" onClick={() => setIsMenuOpen(false)}>
+                                        <Button className="btn-primary w-full">
+                                            Sign In
+                                        </Button>
+                                    </Link>
+                                </div>
           )}
-        </AnimatePresence>
+                        </div>
       </div>
+                )}
     </nav>
-  );
-};
+            {/* Spacer to prevent content overlap */}
+            <div className="h-20"></div>
+        </>
+    )
+}
 
-export default Navigation; 
+export default Navigation 

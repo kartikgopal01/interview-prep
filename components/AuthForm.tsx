@@ -149,6 +149,17 @@ const AuthForm = ({ type }: { type: FormType }) => {
               type="password"
             />
 
+            {isSignIn && (
+              <div className="text-right">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-primary hover:text-primary/80 transition-colors"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+            )}
+
             <Button 
               className="btn-primary w-full py-3 text-lg font-semibold" 
               type="submit"

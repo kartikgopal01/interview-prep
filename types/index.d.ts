@@ -86,7 +86,7 @@ interface SignUpParams {
   password: string;
 }
 
-type FormType = "sign-in" | "sign-up";
+type FormType = "sign-in" | "sign-up" | "forgot-password";
 
 interface InterviewFormProps {
   interviewId: string;

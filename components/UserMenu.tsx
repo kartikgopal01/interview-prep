@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { signOut } from "@/lib/utils";
 
 interface UserMenuProps {
   user: {
@@ -23,12 +24,8 @@ interface UserMenuProps {
 
 const UserMenu = ({ user }: UserMenuProps) => {
   const handleSignOut = async () => {
-    try {
-      // Clear any client-side auth state
-      window.location.href = '/sign-in';
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
+    // Use the comprehensive signOut utility
+    await signOut();
   };
 
   const getInitials = (name: string) => {

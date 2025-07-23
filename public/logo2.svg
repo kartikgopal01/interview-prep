@@ -1,9 +1,9 @@
 <svg width="100%" height="100%" viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E0E6FF" />
-      <stop offset="50%" stop-color="#F8F9FF" />
-      <stop offset="100%" stop-color="#FFFFFF" />
+      <stop offset="0%" stop-color="#1a1a1a" />
+      <stop offset="50%" stop-color="#2d2d2d" />
+      <stop offset="100%" stop-color="#000000" />
     </linearGradient>
     <linearGradient id="highlightGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#4361EE" />
@@ -11,9 +11,9 @@
       <stop offset="100%" stop-color="#4CC9F0" />
     </linearGradient>
     <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F72585" />
-      <stop offset="50%" stop-color="#FF0A54" />
-      <stop offset="100%" stop-color="#FF6600" />
+      <stop offset="0%" stop-color="#4361EE" />
+      <stop offset="50%" stop-color="#3A86FF" />
+      <stop offset="100%" stop-color="#4CC9F0" />
     </linearGradient>
     <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
       <feGaussianBlur stdDeviation="6" result="blur" />
@@ -165,7 +165,7 @@
   
   <g transform="translate(150, 40)">
     <circle class="particle particle-right" cx="0" cy="0" r="5" fill="#4CC9F0" opacity="0.5" />
-    <circle class="particle particle-left" cx="0" cy="0" r="3" fill="#F72585" opacity="0.5" />
+    <circle class="particle particle-left" cx="0" cy="0" r="3" fill="#4361EE" opacity="0.5" />
   </g>
   
   <g class="sparkle" opacity="0.7">

@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Mona_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "../components/ThemeProvider";
 
 const MonaSans = Mona_Sans({
   variable: "--font-mona-sans",
@@ -57,10 +56,8 @@ export default function RootLayout({
       <body
         className={`${MonaSans.variable} antialiased`}
       >
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          {children}
-          <Toaster/>
-        </ThemeProvider>
+        {children}
+        <Toaster/>
       </body>
     </html>
   );

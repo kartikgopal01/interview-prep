@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Button } from "@/components/ui/button";
 import { User, BarChart3, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { signOut } from "@/lib/utils";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -15,8 +16,7 @@ const Navigation = () => {
     const navItems = [
         { href: "/", label: "Home" },
         { href: "/interview", label: "AI Interview" },
-        { href: "/peer-interview", label: "Peer Interview" },
-        { href: "/profile", label: "Profile" }
+        { href: "/peer-interview", label: "Peer Interview" }
     ];
 
   useEffect(() => {
@@ -32,15 +32,11 @@ const Navigation = () => {
   }, []);
   
     const handleSignOut = async () => {
-        try {
-            // Clear session cookie
-            document.cookie = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            setUser(null);
-            router.push('/auth/sign-in');
-        } catch (error) {
-            console.error('Sign out error:', error);
-    }
-  };
+        // Clear component state before redirect
+        setUser(null);
+        // Use the comprehensive signOut utility
+        await signOut();
+    };
   
     const getInitials = (name: string) => {
         return name

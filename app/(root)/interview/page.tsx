@@ -55,21 +55,23 @@ const InterviewPage = async ({ searchParams }: Props) => {
                 <p className="text-muted-foreground text-lg">Master your interview skills with personalized AI feedback</p>
             </div>
 
-            <div className="cta-section mx-auto">
-                <div className="space-y-4">
-                    <div className="cta-badge">
-                        🤖 AI-Powered
+            <div className="cta-container">
+                <div className="cta-section mx-auto">
+                    <div className="space-y-4">
+                        <div className="cta-badge">
+                            🤖 AI-Powered
+                        </div>
+                        <h2 className="text-3xl font-bold">Practice with an AI Interviewer</h2>
+                        <p className="text-white/90 text-lg leading-relaxed">
+                            Our advanced AI will simulate a real interview experience based on your preferences.
+                            Get instant feedback and improve your skills with every practice session.
+                        </p>
+                        <div className="pt-4">
+                            <Link href="#generate-section" className="btn-primary justify-center">
+                                Start New Practice Interview
+                            </Link>
                     </div>
-                    <h2 className="text-3xl font-bold">Practice with an AI Interviewer</h2>
-                    <p className="text-white/90 text-lg leading-relaxed">
-                        Our advanced AI will simulate a real interview experience based on your preferences.
-                        Get instant feedback and improve your skills with every practice session.
-                    </p>
-                    <div className="pt-4">
-                        <Link href="#generate-section" className="btn-primary justify-center">
-                            Start New Practice Interview
-                        </Link>
-                </div>
+                    </div>
                 </div>
             </div>
             

@@ -185,6 +185,15 @@ body {
   .cta-section {
     @apply bg-cta text-white rounded-4xl px-7 py-6 flex flex-col items-center text-center gap-4 w-2/3 max-lg:w-3/4 max-md:w-full;
   }
+  .cta-container {
+    @apply flex justify-center items-center w-full mx-auto rounded-4xl px-2 py-2;
+    background-image: url('/cta-background.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    min-height: 80vh;
+    margin: 0;
+  }
   .cta-badge {
     @apply bg-cta-gold rounded-4xl px-3 py-1.5 text-black;
 }
@@ -328,16 +337,13 @@ body {
     @apply flex items-center justify-center mx-auto max-w-7xl min-h-screen max-sm:px-4 max-sm:py-8;
   }
 
-  .root-layout {
-    @apply flex mx-auto max-w-7xl flex-col gap-12 px-16 max-sm:px-4;
-  }
 
   .card-cta {
     @apply flex flex-row blue-gradient-dark rounded-3xl px-16 py-6 items-center justify-between max-sm:px-4;
   }
 
   .interviews-section {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16 w-full;
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full;
   }
 
   .interview-text {

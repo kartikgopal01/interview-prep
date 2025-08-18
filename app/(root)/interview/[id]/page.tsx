@@ -12,6 +12,13 @@ const Page = async ({ params }: RouteParams) => {
 
     if(!interview) redirect('/')
 
+    // Normalize techstack to a string[]
+    const safeTechstack: string[] = Array.isArray(interview.techstack)
+        ? interview.techstack
+        : typeof interview.techstack === 'string'
+            ? interview.techstack.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0)
+            : [];
+
     return (
         <div className="max-w-6xl mx-auto space-y-8">
             {/* Interview Header */}
@@ -43,18 +50,18 @@ const Page = async ({ params }: RouteParams) => {
                 </div>
 
                 {/* Tech Stack Display */}
-                {interview.techstack && interview.techstack.length > 0 && (
+                {safeTechstack.length > 0 && (
                     <div className="mt-6 pt-6 border-t border-border">
                         <h3 className="text-sm font-semibold text-foreground mb-3">
                             Technologies & Skills
                         </h3>
                         <div className="flex flex-wrap gap-2">
-                            {interview.techstack.map((tech: string, index: number) => (
+                            {safeTechstack.map((tech: string, index: number) => (
                                 <span 
                                     key={index} 
                                     className="bg-cta-gold text-black text-sm px-3 py-1.5 rounded-full font-medium"
                                 >
-                                    {tech.trim()}
+                                    {tech}
                                 </span>
                             ))}
                         </div>

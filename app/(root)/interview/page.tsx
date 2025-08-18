@@ -1,14 +1,12 @@
-import Agent from "@/components/Agent";
-import { getCurrentUser } from "@/lib/actions/auth.action";
-import { getInterviewsByUserId } from "@/lib/actions/general.action";
-import SearchFilter from "@/components/SearchFilter";
-import InterviewCard from "@/components/InterviewCard";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Suspense } from 'react';
+import Link from 'next/link';
+import { getCurrentUser } from '@/lib/actions/auth.action';
+import { getInterviewsByUserId } from '@/lib/actions/general.action';
+import SearchFilter from '@/components/SearchFilter';
+import Agent from '@/components/Agent';
 
 type Props = {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 const InterviewPage = async ({ searchParams }: Props) => {
@@ -18,12 +16,15 @@ const InterviewPage = async ({ searchParams }: Props) => {
     const userId = user?.id || "";
     const interviews = await getInterviewsByUserId(userId);
     
+    // Await searchParams for Next.js 15 compatibility
+    const resolvedSearchParams = await searchParams;
+    
     // Apply search and filtering
-    const searchTerm = typeof searchParams.search === 'string' 
-        ? searchParams.search.toLowerCase() 
+    const searchTerm = typeof resolvedSearchParams.search === 'string' 
+        ? resolvedSearchParams.search.toLowerCase() 
         : '';
-    const filterValue = typeof searchParams.filter === 'string' 
-        ? searchParams.filter 
+    const filterValue = typeof resolvedSearchParams.filter === 'string' 
+        ? resolvedSearchParams.filter 
         : '';
     
     // Filter interviews
@@ -93,44 +94,53 @@ const InterviewPage = async ({ searchParams }: Props) => {
                 
                 <div className="companions-grid">
                     {filteredInterviews && filteredInterviews.length > 0 ? (
-                        filteredInterviews.map((interview) => (
-                            <div key={interview.id} className="companion-card bg-white">
-                                <div className="flex justify-between items-center">
-                                    <div className="subject-badge bg-primary text-white">
-                                        {interview.type}
-                                    </div>
-                                    <div className="text-sm text-muted-foreground">
-                                        {new Date(interview.createdAt).toLocaleDateString()}
-                                    </div>
-                                </div>
+                        filteredInterviews.map((interview) => {
+                            // Ensure techstack is always an array
+                            const safeTechstack: string[] = Array.isArray(interview.techstack) 
+                                ? interview.techstack 
+                                : typeof interview.techstack === 'string' 
+                                    ? interview.techstack.split(',').map((tech: string) => tech.trim()).filter((tech: string) => tech.length > 0)
+                                    : [];
 
-                                <h2 className="text-2xl font-bold text-foreground">{interview.role}</h2>
-                                
-                                <div className="space-y-2">
-                                    {interview.techstack && interview.techstack.length > 0 && (
-                                        <div className="flex flex-wrap gap-1">
-                                            {interview.techstack.slice(0, 3).map((tech: string, index: number) => (
-                                                <span key={index} className="bg-cta-gold text-black text-xs px-2 py-1 rounded-full">
-                                                    {tech.trim()}
-                                                </span>
-                                            ))}
+                            return (
+                                <div key={interview.id} className="companion-card bg-white">
+                                    <div className="flex justify-between items-center">
+                                        <div className="subject-badge bg-primary text-white">
+                                            {interview.type}
                                         </div>
-                                    )}
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        {interview.finalized ? 'Completed' : 'In Progress'}
+                                        <div className="text-sm text-muted-foreground">
+                                            {new Date(interview.createdAt).toLocaleDateString()}
+                                        </div>
                                     </div>
-                                </div>
 
-                                <Link href={`/interview/${interview.id}`} className="w-full">
-                                    <button className="btn-primary w-full justify-center">
-                                        {interview.finalized ? 'View Results' : 'Continue Interview'}
-                                    </button>
-                                </Link>
-                            </div>
-                        ))
+                                    <h2 className="text-2xl font-bold text-foreground">{interview.role}</h2>
+                                    
+                                    <div className="space-y-2">
+                                        {safeTechstack.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                                {safeTechstack.slice(0, 3).map((tech: string, index: number) => (
+                                                    <span key={index} className="bg-cta-gold text-black text-xs px-2 py-1 rounded-full">
+                                                        {tech.trim()}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            {interview.finalized ? 'Completed' : 'In Progress'}
+                                        </div>
+                                    </div>
+
+                                    <Link href={`/interview/${interview.id}`} className="w-full">
+                                        <button className="btn-primary w-full justify-center">
+                                            {interview.finalized ? 'View Results' : 'Continue Interview'}
+                                        </button>
+                                    </Link>
+                                </div>
+                            );
+                        })
                     ) : (
                         <div className="companion-list text-center py-16 col-span-full">
                             {searchTerm || filterValue ? (

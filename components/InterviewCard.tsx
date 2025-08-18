@@ -24,6 +24,14 @@ const InterviewCard = async ({
     const normalizedType = /mix/gi.test(type) ? 'Mixed' : type;
     const formattedDate = dayjs(feedback?.createdAt || createdAt || Date.now()).format('MMM D, YYYY');
 
+    // Ensure techstack is always an array
+    let safeTechstack: string[] = [];
+    if (Array.isArray(techstack)) {
+        safeTechstack = techstack;
+    } else if (typeof techstack === 'string') {
+        safeTechstack = techstack.split(',').map((tech: string) => tech.trim()).filter((tech: string) => tech.length > 0);
+    }
+
     // Determine button text based on interview status and creator/taker relationship
     let buttonText = 'Start Interview';
     let buttonHref = `/interview/${id}`;
@@ -75,7 +83,7 @@ const InterviewCard = async ({
                 </h2>
                 
                 <p className="text-sm text-black/70">
-                    {type.replace('_', ' ')} • {techstack?.length || 0} technologies
+                    {type.replace('_', ' ')} • {safeTechstack.length} technologies
                 </p>
                 
                 <div className="flex items-center justify-between text-sm text-black/70">
@@ -91,16 +99,16 @@ const InterviewCard = async ({
                     )}
                 </div>
 
-                {techstack && techstack.length > 0 && (
+                {safeTechstack.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                        {techstack.slice(0, 3).map((tech: string, index: number) => (
+                        {safeTechstack.slice(0, 3).map((tech: string, index: number) => (
                             <span key={index} className="bg-cta-gold text-black text-xs px-2 py-1 rounded-full font-medium">
                                 {tech.trim()}
                             </span>
                         ))}
-                        {techstack.length > 3 && (
+                        {safeTechstack.length > 3 && (
                             <span className="bg-black/10 text-black text-xs px-2 py-1 rounded-full font-medium">
-                                +{techstack.length - 3} more
+                                +{safeTechstack.length - 3} more
                             </span>
                         )}
                     </div>
@@ -167,7 +175,7 @@ const InterviewCard = async ({
                     </div>
 
                     <div className="flex flex-row justify-between">
-                        <DisplayTechIcons techStack={techstack} />
+                        <DisplayTechIcons techStack={safeTechstack} />
 
                         <Link href={buttonHref}>
                             <button className="btn-primary">

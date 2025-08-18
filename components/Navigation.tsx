@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { User, BarChart3, LogOut } from "lucide-react";
@@ -49,7 +50,7 @@ const Navigation = () => {
   
   return (
         <>
-            <nav className="fixed top-0 left-0 right-0 w-full bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm z-50">
+            <nav className="fixed top-0 left-0 right-0 w-full bg-background/80 backdrop-blur-md border-b border-border shadow-sm z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
                     <div className="flex items-center justify-between h-20">
                         <Link href="/">
@@ -66,7 +67,7 @@ const Navigation = () => {
 
                         {/* Hamburger Menu Button */}
                         <button 
-                            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100"
+                            className="lg:hidden p-1.5 rounded-lg hover:bg-secondary"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                         >
                             <svg 
@@ -89,12 +90,12 @@ const Navigation = () => {
                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className="text-gray-700 hover:text-primary transition-colors duration-200 font-medium"
+                                    className="text-foreground hover:text-primary transition-colors duration-200 font-medium"
                 >
                                     {item.label}
                 </Link>
                             ))}
-                            
+                            <ThemeToggle />
                             {user ? (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -161,13 +162,16 @@ const Navigation = () => {
 
                 {/* Mobile Navigation */}
           {isMenuOpen && (
-                    <div className="lg:hidden border-t border-gray-200 bg-white/95 backdrop-blur-md">
+                    <div className="lg:hidden border-t border-border bg-background/95 backdrop-blur-md">
                         <div className="px-4 py-3 space-y-3">
+                            <div className="flex items-center justify-end">
+                                <ThemeToggle />
+                            </div>
                             {navItems.map((item) => (
                     <Link
                                     key={item.href}
                                     href={item.href}
-                                    className="block text-gray-700 hover:text-primary transition-colors duration-200 font-medium py-2"
+                                    className="block text-foreground hover:text-primary transition-colors duration-200 font-medium py-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
                                     {item.label}
@@ -203,7 +207,7 @@ const Navigation = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="pt-2 border-t border-gray-100">
+                                <div className="pt-2 border-t border-border">
                                     <Link href="/auth/sign-in" onClick={() => setIsMenuOpen(false)}>
                                         <Button className="btn-primary w-full">
                                             Sign In

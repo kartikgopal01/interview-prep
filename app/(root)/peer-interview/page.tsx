@@ -2,6 +2,7 @@ import React from 'react';
 import {Button} from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {getCurrentUser} from "@/lib/actions/auth.action";
 import { getPeerInterviews, getUserPeerInterviews } from '@/lib/actions/peer-interview.action';
 import PeerInterviewCard from '@/components/PeerInterviewCard';
@@ -77,46 +78,38 @@ const PeerInterviewPage = async ({ searchParams }: Props) => {
 
     return (
         <>
-            <div className="cta-container">
-                <section className="cta-section mx-auto">
-                    <div className="cta-badge">
-                        Peer-to-Peer Learning
-                    </div>
-                    <h2 className="text-3xl font-bold">
-                        Practice Interviews With Fellow Developers
-                    </h2>
-                    <p className="text-white/90 text-lg leading-relaxed">
-                        Create a peer interview to practice with another developer, or join an existing interview as an interviewer. 
-                        Get real human feedback and improve together.
-                    </p>
-                    
-                    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-                        <Link href="/peer-interview/create" className="flex-1">
-                            <button className="btn-primary w-full justify-center gap-2">
-                                <Image src="/peer-avatar.png" alt="Create" width={20} height={20} className="rounded" />
-                                Create Interview
-                            </button>
-                        </Link>
-                        <Link href="/peer-interview/dashboard" className="flex-1">
-                            <button className="btn-primary w-full justify-center gap-2 bg-cta-gold text-black hover:bg-cta-gold/90">
-                                <Image src="/calendar.svg" alt="Dashboard" width={20} height={20} />
-                                View Dashboard
-                            </button>
-                        </Link>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-6 mt-6 text-center">
-                        <div className="space-y-2">
-                            <h3 className="font-semibold">Create & Practice</h3>
-                            <p className="text-sm text-white/80">Set up interviews & practice your skills</p>
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="font-semibold">Join & Help</h3>
-                            <p className="text-sm text-white/80">Interview others & gain experience</p>
+            <section className="rounded-2xl border bg-card text-card-foreground dark:bg-card dark:border-border">
+                <div className="grid md:grid-cols-2 gap-8 p-8 md:p-12 items-center">
+                    <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-secondary text-secondary-foreground px-3 py-1 text-xs ring-1 ring-border mb-2">Peer-to-Peer</div>
+                        <h2 className="text-3xl font-bold">Practice Interviews With Fellow Developers</h2>
+                        <p className="text-muted-foreground">Create an interview to practice with another developer or join as an interviewer.</p>
+                        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                            <Button asChild>
+                                <Link href="/peer-interview/create" className="flex-1">Create Interview</Link>
+                            </Button>
+                            <Button asChild variant="outline">
+                                <Link href="/peer-interview/dashboard" className="flex-1">View Dashboard</Link>
+                            </Button>
                         </div>
                     </div>
-                </section>
-            </div>
+                    <div>
+                        <Card className="shadow-sm dark:bg-input/20 dark:border-input">
+                            <CardHeader>
+                                <CardTitle className="text-xl text-foreground dark:text-card-foreground">Why peer interviews?</CardTitle>
+                                <CardDescription className="text-muted-foreground dark:text-card-foreground/70">Practice with humans to simulate real-world interviews.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ul className="grid gap-3 text-sm text-muted-foreground dark:text-card-foreground/80">
+                                    <li>• Real interaction and communication practice</li>
+                                    <li>• Get feedback from other developers</li>
+                                    <li>• Build confidence through collaboration</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </div>
+            </section>
 
             <section className="flex flex-col gap-6 mt-8">
                 <h2>Your Peer Interviews</h2>

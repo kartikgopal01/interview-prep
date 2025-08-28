@@ -1,7 +1,7 @@
 import {ReactNode} from 'react'
 import { redirect } from 'next/navigation';
 import { isAuthenticated, getCurrentUser } from '@/lib/actions/auth.action';
-import Navigation from '@/components/Navigation';
+import AppShell from '@/components/layout/AppShell';
 
 const Rootlayout = async ({children}:{children: React.ReactNode}) => {
   const isUserAuthenticated = await isAuthenticated();
@@ -12,13 +12,9 @@ const Rootlayout = async ({children}:{children: React.ReactNode}) => {
   const user = await getCurrentUser();
   
   return (
-    <div className='root-layout'>
-      <Navigation />
-      
-      <main>
-        {children}
-      </main>
-    </div>
+    <AppShell>
+      {children}
+    </AppShell>
   )
 }
 

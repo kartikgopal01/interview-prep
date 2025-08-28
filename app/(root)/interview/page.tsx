@@ -1,47 +1,83 @@
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import InterviewCard from "@/components/InterviewCard";
+import { getCurrentUser } from "@/lib/actions/auth.action";
+import { getInterviewsByUserId, getLatestInterviews } from "@/lib/actions/general.action";
+import SearchFilter from "@/components/SearchFilter";
 import { Suspense } from 'react';
-import Link from 'next/link';
-import { getCurrentUser } from '@/lib/actions/auth.action';
-import { getInterviewsByUserId } from '@/lib/actions/general.action';
-import SearchFilter from '@/components/SearchFilter';
 import Agent from '@/components/Agent';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
 
 type Props = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  searchParams: { [key: string]: string | string[] | undefined };
+};
+
+// Color mapping for interview types
+const getInterviewColor = (type: string) => {
+  const colorMap: { [key: string]: string } = {
+    technical: "#FFC8E4", // coding pink
+    behavioral: "#BDE7FF", // language blue
+    system_design: "#E5D0FF", // science purple
+    mixed: "#FFDA6E", // maths yellow
+    frontend: "#FFC8E4", // coding pink
+    backend: "#C8FFDF", // biology green
+    fullstack: "#FFECC8", // chemistry orange
+  };
+
+  return colorMap[type.toLowerCase()] || "#E5D0FF"; // default to science purple
 };
 
 const InterviewPage = async ({ searchParams }: Props) => {
     const user = await getCurrentUser();
-    
-    // Get user's interviews with a fallback for undefined user ID
-    const userId = user?.id || "";
-    const interviews = await getInterviewsByUserId(userId);
-    
-    // Await searchParams for Next.js 15 compatibility
-    const resolvedSearchParams = await searchParams;
-    
+
+    const [userInterviews, latestInterviews] = await Promise.all([
+        await getInterviewsByUserId(user?.id!),
+        await getLatestInterviews({ userId: user?.id! })
+    ]);
+
     // Apply search and filtering
-    const searchTerm = typeof resolvedSearchParams.search === 'string' 
-        ? resolvedSearchParams.search.toLowerCase() 
+    const searchTerm = typeof searchParams.search === 'string'
+        ? searchParams.search.toLowerCase()
         : '';
-    const filterValue = typeof resolvedSearchParams.filter === 'string' 
-        ? resolvedSearchParams.filter 
+    const filterValue = typeof searchParams.filter === 'string'
+        ? searchParams.filter
         : '';
-    
-    // Filter interviews
-    const filteredInterviews = interviews?.filter(interview => {
-      // Search term matching (using the correct fields from the Interview interface)
-      const matchesSearch = !searchTerm || 
-        (interview.role || "").toLowerCase().includes(searchTerm) || 
+
+    // Filter user interviews
+    const filteredUserInterviews = userInterviews?.filter(interview => {
+      // Search term matching
+      const matchesSearch = !searchTerm ||
+        (interview.role || "").toLowerCase().includes(searchTerm) ||
         (interview.type || "").toLowerCase().includes(searchTerm);
-      
+
       // Filter matching
-      const matchesFilter = !filterValue || 
-        (filterValue === 'all') || 
+      const matchesFilter = !filterValue ||
+        (filterValue === 'all') ||
         (interview.type === filterValue);
-      
+
       return matchesSearch && matchesFilter;
     });
-    
+
+    // Filter latest interviews
+    const filteredLatestInterviews = latestInterviews?.filter(interview => {
+      // Search term matching
+      const matchesSearch = !searchTerm ||
+        (interview.role || "").toLowerCase().includes(searchTerm) ||
+        (interview.type || "").toLowerCase().includes(searchTerm);
+
+      // Filter matching
+      const matchesFilter = !filterValue ||
+        (filterValue === 'all') ||
+        (interview.type === filterValue);
+
+      return matchesSearch && matchesFilter;
+    });
+
+    const hasPastInterviews = (filteredUserInterviews || []).length > 0;
+    const hasUpcomingInterviews = (filteredLatestInterviews || []).length > 0;
+
     const filterOptions = [
       { label: 'Technical', value: 'technical' },
       { label: 'Behavioral', value: 'behavioral' },
@@ -50,127 +86,112 @@ const InterviewPage = async ({ searchParams }: Props) => {
     ];
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8">
-            <div className="text-center space-y-2">
-                <h1 className="text-4xl font-bold text-foreground">AI Interview Practice</h1>
-                <p className="text-muted-foreground text-lg">Master your interview skills with personalized AI feedback</p>
-            </div>
-
-            <div className="cta-container">
-                <div className="cta-section mx-auto">
-                    <div className="space-y-4">
-                        <div className="cta-badge">
-                            🤖 AI-Powered
+        <>
+            <section className="relative rounded-2xl border bg-card text-card-foreground dark:bg-card dark:border-border">
+                <div className="grid md:grid-cols-2 gap-8 p-8 md:p-12 items-center">
+                    <div className="space-y-5">
+                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                            Get interview‑ready with a modern AI platform
+                        </h1>
+                        <p className="text-muted-foreground">Practice technical, behavioral, and system design interviews with instant insights. Collaborate with peers when you want human feedback.</p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <Button asChild size="lg">
+                                <Link href="#generate-section">Start AI Interview</Link>
+                            </Button>
+                            <Button asChild variant="outline" size="lg">
+                                <Link href="/peer-interview">Join Peer Interview</Link>
+                            </Button>
                         </div>
-                        <h2 className="text-3xl font-bold">Practice with an AI Interviewer</h2>
-                        <p className="text-white/90 text-lg leading-relaxed">
-                            Our advanced AI will simulate a real interview experience based on your preferences.
-                            Get instant feedback and improve your skills with every practice session.
-                        </p>
-                        <div className="pt-4">
-                            <Link href="#generate-section" className="btn-primary justify-center">
-                                Start New Practice Interview
-                            </Link>
                     </div>
+                    <div className="relative">
+                        <Card className="shadow-sm dark:bg-input/20 dark:border-input">
+                            <CardHeader>
+                                <CardTitle className="text-xl">Why practice here?</CardTitle>
+                                <CardDescription>Master your interview skills with our comprehensive platform</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <ul className="grid gap-3 text-sm text-muted-foreground dark:text-card-foreground/80">
+                                    <li>• AI-powered personalized feedback</li>
+                                    <li>• Real-time peer collaboration</li>
+                                    <li>• Comprehensive question database</li>
+                                    <li>• Progress tracking and analytics</li>
+                                </ul>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
-            </div>
-            
-            <div className="space-y-8">
-                <div className="text-center">
-                    <h3 className="text-2xl font-bold text-foreground mb-2">Your Interview History</h3>
-                    <p className="text-muted-foreground">Track your progress and review past sessions</p>
-                </div>
-                
-                <Suspense fallback={
-                    <div className="animate-pulse h-12 w-full bg-muted rounded-lg"></div>
-                }>
-                    <SearchFilter 
-                        filterOptions={filterOptions} 
-                        baseUrl="/interview" 
+            </section>
+
+            <section className="flex flex-col gap-6 mt-8">
+                <h2>Your Interviews</h2>
+
+                <Suspense fallback={<div className="animate-pulse h-12 w-full bg-gray-200 dark:bg-gray-700 rounded-md"></div>}>
+                    <SearchFilter
+                        filterOptions={filterOptions}
+                        baseUrl="/interview"
                         placeholder="Search by role or interview type..."
                     />
                 </Suspense>
-                
-                <div className="companions-grid">
-                    {filteredInterviews && filteredInterviews.length > 0 ? (
-                        filteredInterviews.map((interview) => {
-                            // Ensure techstack is always an array
-                            const safeTechstack: string[] = Array.isArray(interview.techstack) 
-                                ? interview.techstack 
-                                : typeof interview.techstack === 'string' 
-                                    ? interview.techstack.split(',').map((tech: string) => tech.trim()).filter((tech: string) => tech.length > 0)
-                                    : [];
 
-                            return (
-                                <div key={interview.id} className="companion-card bg-white">
-                                    <div className="flex justify-between items-center">
-                                        <div className="subject-badge bg-primary text-white">
-                                            {interview.type}
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">
-                                            {new Date(interview.createdAt).toLocaleDateString()}
-                                        </div>
-                                    </div>
-
-                                    <h2 className="text-2xl font-bold text-foreground">{interview.role}</h2>
-                                    
-                                    <div className="space-y-2">
-                                        {safeTechstack.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                                {safeTechstack.slice(0, 3).map((tech: string, index: number) => (
-                                                    <span key={index} className="bg-cta-gold text-black text-xs px-2 py-1 rounded-full">
-                                                        {tech.trim()}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            {interview.finalized ? 'Completed' : 'In Progress'}
-                                        </div>
-                                    </div>
-
-                                    <Link href={`/interview/${interview.id}`} className="w-full">
-                                        <button className="btn-primary w-full justify-center">
-                                            {interview.finalized ? 'View Results' : 'Continue Interview'}
-                                        </button>
-                                    </Link>
-                                </div>
-                            );
-                        })
-                    ) : (
-                        <div className="companion-list text-center py-16 col-span-full">
+                <div className="interviews-section">
+                    {hasPastInterviews ? (
+                        filteredUserInterviews?.map((interview) => (
+                            <InterviewCard
+                                {...interview}
+                                key={interview.id}
+                                userId={user?.id}
+                                isCreator={true}
+                                color={getInterviewColor(interview.type)}
+                            />
+                        ))) : (
+                        <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
                             {searchTerm || filterValue ? (
-                                <div className="space-y-4">
-                                    <div className="text-6xl">🔍</div>
-                                    <h3 className="text-xl font-semibold text-foreground">No matching interviews found</h3>
-                                    <p className="text-muted-foreground">Try adjusting your search or filters.</p>
-                                </div>
+                                <p>No matching interviews found. Try adjusting your search or filters.</p>
                             ) : (
-                                <div className="space-y-4">
-                                    <div className="text-6xl">🚀</div>
-                                    <h3 className="text-xl font-semibold text-foreground">Ready to start your interview journey?</h3>
-                                    <p className="text-muted-foreground">Create your first AI-powered interview practice session below!</p>
-                                </div>
+                                <p>You haven&apos;t taken any interviews yet</p>
                             )}
                         </div>
                     )}
                 </div>
-            </div>
-            
-            <div id="generate-section" className="space-y-6 border-t border-border pt-8">
+            </section>
+
+            <section className="flex flex-col gap-6 mt-8">
+                <h2>Take an Interview</h2>
+
+                <div className="interviews-section">
+                    {hasUpcomingInterviews ? (
+                        filteredLatestInterviews?.map((interview) => (
+                            <InterviewCard
+                                {...interview}
+                                key={interview.id}
+                                userId={user?.id}
+                                isCreator={false}
+                                color={getInterviewColor(interview.type)}
+                            />
+                        ))) : (
+                        <div className="p-8 text-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+                            {searchTerm || filterValue ? (
+                                <p>No matching interviews found. Try adjusting your search or filters.</p>
+                            ) : (
+                                <p>There are no new interviews available</p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            <div id="generate-section" className="space-y-6 border-t border-border pt-8 mt-8">
                 <div className="text-center space-y-2">
                     <h3 className="text-2xl font-bold text-foreground">Generate New Interview</h3>
                     <p className="text-muted-foreground">Customize your practice session</p>
                 </div>
-                <div className="companion-list">
-                <Agent userName={user?.name || ""} userId={user?.id} type="generate" />
-                </div>
+                <Card className="max-w-3xl mx-auto dark:bg-input/20 dark:border-input">
+                    <CardContent className="p-0">
+                        <Agent userName={user?.name || ""} userId={user?.id} type="generate" />
+                    </CardContent>
+                </Card>
             </div>
-        </div>
+        </>
     );
 };
 

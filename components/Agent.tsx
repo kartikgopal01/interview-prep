@@ -3,7 +3,7 @@
 import Image from "next/image";
 import {cn} from "@/lib/utils";
 import {useRouter} from "next/navigation";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import { vapi } from '@/lib/vapi.sdk';
 import {interviewer} from "@/constants";
 import {createFeedback} from "@/lib/actions/general.action";
@@ -28,6 +28,7 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
     const [messages, setMessages] = useState<SavedMessage[]>([]);
+    const hasSubmittedRef = useRef(false);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -89,23 +90,48 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
     const handleGenerateFeedback = async (messages: SavedMessage[]) => {
         console.log('Generate feedback here.');
 
-        const { success, feedbackId: id } = await createFeedback({
-            interviewId: interviewId!,
-            userId: userId!,
-            transcript: messages,
-        })
+        if (!messages || messages.length === 0) {
+            console.warn('No transcript messages captured; skipping feedback submission.');
+            toast.error('No transcript captured. Please try again.');
+            return;
+        }
 
-        if(success && id) {
-            router.push(`/interview/${interviewId}/feedback`);
-        } else {
-            console.log('Error saving feedback');
-            router.push('/');
+        try {
+            const { success, feedbackId: id, error: saveError } = await createFeedback({
+                interviewId: interviewId!,
+                userId: userId!,
+                transcript: messages,
+            });
+
+            if (success && id) {
+                toast.success('Feedback generated');
+                router.push(`/interview/${interviewId}/feedback`);
+            } else {
+                console.error('Error saving feedback', saveError);
+                toast.error(saveError || 'Could not save feedback. Please try again.');
+                // allow retry
+                hasSubmittedRef.current = false;
+            }
+        } catch (err) {
+            console.error('Unexpected error saving feedback', err);
+            toast.error('Unexpected error while saving feedback. Please try again.');
+            hasSubmittedRef.current = false;
         }
     }
 
     useEffect(() => {
-        if(callStatus === CallStatus.FINISHED && type === 'interview') {
-            handleGenerateFeedback(messages);
+        if (
+            type === 'interview' &&
+            callStatus === CallStatus.FINISHED &&
+            messages.length > 0 &&
+            !hasSubmittedRef.current
+        ) {
+            // allow a brief delay for any final transcripts to flush in
+            hasSubmittedRef.current = true;
+            const timeout = setTimeout(() => {
+                handleGenerateFeedback(messages);
+            }, 500);
+            return () => clearTimeout(timeout);
         }
     }, [messages, callStatus, type, userId]);
 
@@ -198,9 +224,7 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
             await vapi.start(interviewer, {
                 variableValues: {
                     questions: formattedQuestions
-                },
-                clientMessages: [],
-                serverMessages: []
+                }
             });
         } catch (error) {
             console.error('[Agent] Failed to start call:', error);

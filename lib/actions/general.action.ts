@@ -48,6 +48,9 @@ export async function createFeedback(params: CreateFeedbackParams) {
     const { interviewId, userId, transcript } = params;
 
     try {
+        if (!Array.isArray(transcript) || transcript.length === 0) {
+            return { success: false, error: 'Transcript is empty; cannot generate feedback' };
+        }
         const formattedTranscript = transcript.map((sentence: { role: string, content: string }) => (
             `- ${sentence.role}: ${sentence.content}\n`
         )).join('');
@@ -60,24 +63,31 @@ export async function createFeedback(params: CreateFeedbackParams) {
         Transcript:
         ${formattedTranscript}
 
-        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
-        - **Communication Skills**: Clarity, articulation, structured responses.
-        - **Technical Knowledge**: Understanding of key concepts for the role.
-        - **Problem-Solving**: Ability to analyze problems and propose solutions.
-        - **Cultural & Role Fit**: Alignment with company values and job role.
-        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
+        Please score the candidate with integer scores from 0 to 100 in the following exact categories (use these exact names, no additions or changes). Tailor the scores to the transcript content; do not default to the same values:
+        - Communication Skills
+        - Technical Knowledge
+        - Problem Solving
+        - Cultural Fit
+        - Confidence and Clarity
         `,
             system:
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
         });
 
+        // Compute total score from category scores to avoid model-defaulted totals
+        const computedTotalScore = Array.isArray(object.categoryScores) && object.categoryScores.length > 0
+            ? Math.round(
+                object.categoryScores.reduce((sum: number, c: { score: number }) => sum + (c?.score || 0), 0) / object.categoryScores.length
+              )
+            : (typeof object.totalScore === 'number' ? Math.round(object.totalScore) : 0);
+
         const feedback = {
             interviewId,
             userId,
-            totalScore: object.totalScore,
+            totalScore: computedTotalScore,
             categoryScores: object.categoryScores,
             strengths: object.strengths,
-            areasForImprovement: object. areasForImprovement,
+            areasForImprovement: object.areasForImprovement,
             finalAssessment: object.finalAssessment,
             createdAt: new Date().toISOString()
         }

@@ -72,8 +72,8 @@ const VideoChat = ({ roomId, userName, role, onError }: VideoChatProps) => {
       const { ZegoUIKitPrebuilt } = await import('@zegocloud/zego-uikit-prebuilt');
       
       // Fixed credentials for debugging
-      const appId =1187928649;
-      const serverSecret = '32b0c1cbdcb77c82c6d29e351b1e3d82';
+      const appId =1098400113;
+      const serverSecret = '9dacacce761c9140b9a42eda3f63ded1';
       
       // Generate a unique user ID
       const userId = `user_${Date.now()}_${Math.floor(Math.random() * 1000)}`;

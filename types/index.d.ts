@@ -23,6 +23,16 @@ interface Interview {
   userId: string;
   type: string;
   finalized: boolean;
+  resumeData?: {
+    name: string;
+    email?: string;
+    phone?: string;
+    skills?: string[];
+    experience?: string;
+    education?: string;
+    summary?: string;
+    rawText?: string;
+  } | null;
 }
 
 interface CreateFeedbackParams {
@@ -57,6 +67,16 @@ interface AgentProps {
   feedbackId?: string;
   type: "generate" | "interview";
   questions?: string[];
+  resumeData?: {
+    name: string;
+    email?: string;
+    phone?: string;
+    skills?: string[];
+    experience?: string;
+    education?: string;
+    summary?: string;
+    rawText?: string;
+  } | null;
 }
 
 interface RouteParams {

@@ -29,6 +29,7 @@ const nextConfig = {
     optimizePackageImports: ['@/components'],
     optimisticClientCache: true,
   },
+  serverExternalPackages: ['pdf-parse'],
   poweredByHeader: false,
   compress: true,
   productionBrowserSourceMaps: false,

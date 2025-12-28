@@ -23,7 +23,7 @@ interface SavedMessage {
     content: string;
 }
 
-const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) => {
+const Agent = ({ userName, userId, type, interviewId, questions, resumeData: propResumeData }: AgentProps) => {
     const router = useRouter();
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
@@ -37,8 +37,20 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
         type: 'technical',
         techstack: [] as string[],
         techInput: '',
-        amount: 5
+        amount: 5,
+        resume: null as File | null,
+        resumeData: null as {
+            name: string;
+            email?: string;
+            phone?: string;
+            skills?: string[];
+            experience?: string;
+            education?: string;
+            summary?: string;
+            rawText?: string;
+        } | null
     });
+    const [resumeParsing, setResumeParsing] = useState(false);
 
     // VAPI event handlers for voice interviews
     useEffect(() => {
@@ -133,7 +145,7 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
             }, 500);
             return () => clearTimeout(timeout);
         }
-    }, [messages, callStatus, type, userId]);
+    }, [messages, callStatus, type, userId, interviewId]);
 
     // Form handlers for creating new interviews
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -158,6 +170,52 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
         }));
     };
 
+    const handleResumeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (file.type !== 'application/pdf') {
+            toast.error('Please upload a PDF file');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('File size must be less than 5MB');
+            return;
+        }
+
+        setFormData((prev) => ({ ...prev, resume: file }));
+        setResumeParsing(true);
+
+        try {
+            const formDataToSend = new FormData();
+            formDataToSend.append('resume', file);
+
+            const response = await fetch('/api/resume/parse', {
+                method: 'POST',
+                body: formDataToSend,
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                setFormData((prev) => ({ ...prev, resumeData: result.data }));
+                toast.success(`Resume parsed successfully! Found: ${result.data.name || 'Candidate'}`);
+            } else {
+                toast.error(result.error || 'Failed to parse resume');
+                setFormData((prev) => ({ ...prev, resume: null }));
+            }
+        } catch (error) {
+            console.error('Error parsing resume:', error);
+            toast.error('Failed to parse resume. Please try again.');
+            setFormData((prev) => ({ ...prev, resume: null }));
+        } finally {
+            setResumeParsing(false);
+        }
+    };
+
     const handleCreateInterview = async (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -165,8 +223,9 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
             toast.error('Please enter a job role');
             return;
         }
-        if (formData.techstack.length === 0) {
-            toast.error('Please add at least one technology');
+        // Make techstack optional if resume is uploaded
+        if (formData.techstack.length === 0 && !formData.resumeData) {
+            toast.error('Please add at least one technology or upload a resume');
             return;
         }
 
@@ -183,7 +242,8 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
                     level: formData.level,
                     techstack: formData.techstack.join(','),
                     amount: formData.amount,
-                    userid: userId
+                    userid: userId,
+                    resumeData: formData.resumeData
                 }),
             });
 
@@ -221,9 +281,40 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
                     .join('\n');
             }
 
-            await vapi.start(interviewer, {
+            // Get resume data from props (for existing interviews) or form (for new interviews)
+            const resumeData = propResumeData || formData.resumeData;
+            
+            // Build resume context for the interviewer
+            let resumeContext = '';
+            let candidateName = userName;
+            
+            if (resumeData) {
+                candidateName = resumeData.name || userName;
+                resumeContext = `Candidate Information (from resume):
+Name: ${resumeData.name || 'Not provided'}
+Skills: ${resumeData.skills?.join(', ') || 'Not specified'}
+Experience Summary: ${resumeData.experience || 'Not specified'}
+Education: ${resumeData.education || 'Not specified'}
+Professional Summary: ${resumeData.summary || 'Not specified'}
+
+IMPORTANT: Address the candidate by their name "${candidateName}" during the interview. Use their name naturally in conversation, especially when greeting them and throughout the interview. Tailor your questions and follow-ups based on their resume information.`;
+            }
+
+            // Create dynamic first message if resume data is available
+            const firstMessage = resumeData 
+                ? `Hello ${candidateName}! Thank you for taking the time to speak with me today. I've reviewed your resume and I'm excited to learn more about you and your experience.`
+                : interviewer.firstMessage;
+
+            // Create dynamic interviewer configuration with resume context
+            const dynamicInterviewer = {
+                ...interviewer,
+                firstMessage,
+            };
+
+            await vapi.start(dynamicInterviewer, {
                 variableValues: {
-                    questions: formattedQuestions
+                    questions: formattedQuestions,
+                    resumeContext: resumeContext || ''
                 }
             });
         } catch (error) {
@@ -241,6 +332,31 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
             console.error('[Agent] Error stopping call:', error);
             setCallStatus(CallStatus.FINISHED);
         }
+    }
+
+    const handleDownloadTranscript = () => {
+        if (messages.length === 0) {
+            toast.error('No transcript available to download');
+            return;
+        }
+
+        // Format transcript with timestamps and roles
+        const transcriptText = messages.map((msg, index) => {
+            const role = msg.role === 'assistant' ? 'Interviewer' : msg.role === 'user' ? 'Candidate' : 'System';
+            return `[${index + 1}] ${role}: ${msg.content}`;
+        }).join('\n\n');
+
+        // Create a blob and download
+        const blob = new Blob([transcriptText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `interview-transcript-${interviewId || 'interview'}-${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success('Transcript downloaded successfully');
     }
 
     // If this is for creating a new interview (generate type), show the form
@@ -289,7 +405,10 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
 
                         {/* Question Type */}
                         <div className="space-y-2">
-                            <Label htmlFor="type">Question Focus</Label>
+                            <Label htmlFor="type">
+                                Question Focus
+                                {formData.resumeData && <span className="text-xs text-muted-foreground ml-2">(Optional with resume)</span>}
+                            </Label>
                             <select
                                 id="type"
                                 name="type"
@@ -305,7 +424,10 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
 
                         {/* Technologies */}
                         <div className="space-y-2">
-                            <Label htmlFor="techInput">Technologies</Label>
+                            <Label htmlFor="techInput">
+                                Technologies
+                                {formData.resumeData && <span className="text-xs text-muted-foreground ml-2">(Optional with resume)</span>}
+                            </Label>
                             <div className="flex items-center gap-2">
                                 <input
                                     id="techInput"
@@ -347,6 +469,49 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
                                         </button>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* Resume Upload */}
+                        <div className="space-y-2">
+                            <Label htmlFor="resume">Resume (Optional)</Label>
+                            <div className="space-y-2">
+                                <input
+                                    id="resume"
+                                    name="resume"
+                                    type="file"
+                                    accept="application/pdf"
+                                    onChange={handleResumeChange}
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:border-primary transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90"
+                                    disabled={resumeParsing}
+                                />
+                                {resumeParsing && (
+                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Parsing resume...</span>
+                                    </div>
+                                )}
+                                {formData.resumeData && (
+                                    <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                                            ✓ Resume loaded: {formData.resumeData.name}
+                                        </p>
+                                        {formData.resumeData.skills && formData.resumeData.skills.length > 0 && (
+                                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                                                Skills: {formData.resumeData.skills.slice(0, 5).join(', ')}
+                                                {formData.resumeData.skills.length > 5 && '...'}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                                <p className="text-xs text-muted-foreground">
+                                    Upload your resume to get personalized questions based on your experience. The AI will address you by name during the interview.
+                                    {formData.resumeData && (
+                                        <span className="block mt-1 text-green-700 dark:text-green-300 font-medium">
+                                            ✓ Technologies and Question Focus are now optional - questions will be based on your resume.
+                                        </span>
+                                    )}
+                                </p>
                             </div>
                         </div>
 
@@ -483,17 +648,53 @@ const Agent = ({ userName, userId, type, interviewId, questions }: AgentProps) =
             {messages.length > 0 && (
                 <div className="companion-list bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
                     <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                            <h4 className="font-semibold text-blue-900">Live Transcript</h4>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className={cn(
+                                    "w-2 h-2 rounded-full",
+                                    callStatus === CallStatus.ACTIVE ? "bg-blue-500 animate-pulse" : "bg-gray-400"
+                                )}></div>
+                                <h4 className="font-semibold text-blue-900">
+                                    {callStatus === CallStatus.ACTIVE ? 'Live Transcript' : 'Interview Transcript'}
+                                </h4>
+                            </div>
+                            {callStatus === CallStatus.FINISHED && (
+                                <button
+                                    onClick={handleDownloadTranscript}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                    </svg>
+                                    Download Transcript
+                                </button>
+                            )}
                         </div>
-                        <div className="bg-white rounded-lg p-4 border border-blue-200">
-                            <p className={cn(
-                                'text-gray-800 leading-relaxed transition-opacity duration-500 opacity-0', 
-                                'animate-fadeIn opacity-100'
-                            )}>
-                                {latestMessage}
-                            </p>
+                        <div className="bg-white rounded-lg p-4 border border-blue-200 max-h-96 overflow-y-auto">
+                            {callStatus === CallStatus.ACTIVE ? (
+                                <p className={cn(
+                                    'text-gray-800 leading-relaxed transition-opacity duration-500 opacity-0', 
+                                    'animate-fadeIn opacity-100'
+                                )}>
+                                    {latestMessage}
+                                </p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {messages.map((msg, index) => (
+                                        <div key={index} className={cn(
+                                            "p-3 rounded-lg",
+                                            msg.role === 'assistant' ? "bg-blue-50 border-l-4 border-blue-400" : 
+                                            msg.role === 'user' ? "bg-gray-50 border-l-4 border-gray-400" : 
+                                            "bg-yellow-50 border-l-4 border-yellow-400"
+                                        )}>
+                                            <p className="text-xs font-semibold text-gray-600 mb-1">
+                                                {msg.role === 'assistant' ? 'Interviewer' : msg.role === 'user' ? 'Candidate' : 'System'}
+                                            </p>
+                                            <p className="text-gray-800 leading-relaxed">{msg.content}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

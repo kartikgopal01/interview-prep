@@ -20,15 +20,25 @@ async function parsePDF(buffer: Buffer): Promise<string> {
         }
         
         // Otherwise use the default function
+        console.log('[PDF Parse] Calling pdfParse function...');
         const result = await pdfParse(buffer);
-        return typeof result === 'string' ? result : result.text || '';
+        console.log('[PDF Parse] Result type:', typeof result, 'has text:', !!result?.text);
+        
+        // pdf-parse returns an object with text property, not a string
+        if (result && typeof result === 'object' && result.text) {
+            return result.text;
+        }
+        if (typeof result === 'string') {
+            return result;
+        }
+        throw new Error('Unexpected result format from pdf-parse');
     } catch (error) {
         console.error('PDF parse attempt 1 failed:', error);
         
         // Method 2: Try ESM import
         try {
             const pdfParseModule = await import('pdf-parse');
-            const pdfParse = pdfParseModule.default || pdfParseModule;
+            const pdfParse = (pdfParseModule as any).default || pdfParseModule;
             
             if (pdfParseModule.PDFParse) {
                 const parser = new pdfParseModule.PDFParse({ data: buffer });
@@ -37,10 +47,24 @@ async function parsePDF(buffer: Buffer): Promise<string> {
                 return result.text;
             }
             
-            const result = typeof pdfParse === 'function' 
-                ? await pdfParse(buffer) 
-                : await pdfParse.default(buffer);
-            return typeof result === 'string' ? result : result.text || '';
+            console.log('[PDF Parse] Calling pdfParse function (ESM)...');
+            let result;
+            if (typeof pdfParse === 'function') {
+                result = await pdfParse(buffer);
+            } else {
+                const pdfFunc = (pdfParse as any).default || pdfParse;
+                result = await pdfFunc(buffer);
+            }
+            console.log('[PDF Parse] ESM Result type:', typeof result, 'has text:', !!result?.text);
+            
+            // pdf-parse returns an object with text property
+            if (result && typeof result === 'object' && result.text) {
+                return result.text;
+            }
+            if (typeof result === 'string') {
+                return result;
+            }
+            throw new Error('Unexpected result format from pdf-parse (ESM)');
         } catch (importError) {
             console.error('PDF parse attempt 2 failed:', importError);
             throw new Error(`Failed to parse PDF: ${importError instanceof Error ? importError.message : 'Unknown error'}`);
@@ -49,16 +73,27 @@ async function parsePDF(buffer: Buffer): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+    const startTime = Date.now();
+    console.log('[Resume Parse] Request received at', new Date().toISOString());
+    
     try {
+        console.log('[Resume Parse] Parsing form data...');
         const formData = await request.formData();
         const file = formData.get('resume') as File;
 
         if (!file) {
+            console.log('[Resume Parse] No file provided');
             return NextResponse.json(
                 { success: false, error: 'No resume file provided' },
                 { status: 400 }
             );
         }
+        
+        console.log('[Resume Parse] File received:', {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+        });
 
         // Check file type
         const fileType = file.type;
@@ -74,16 +109,20 @@ export async function POST(request: NextRequest) {
         const buffer = Buffer.from(arrayBuffer);
 
         // Parse PDF using pdf-parse
-        console.log('Starting PDF parsing, buffer size:', buffer.length);
+        console.log('[Resume Parse] Starting PDF parsing, buffer size:', buffer.length);
         let resumeText: string;
         try {
             resumeText = await parsePDF(buffer);
-            console.log('PDF parsed successfully, text length:', resumeText?.length || 0);
+            console.log('[Resume Parse] PDF parsed successfully, text length:', resumeText?.length || 0);
+            if (!resumeText || resumeText.trim().length === 0) {
+                console.warn('[Resume Parse] Warning: Extracted text is empty');
+            }
         } catch (parseError) {
-            console.error('PDF parsing failed:', {
+            console.error('[Resume Parse] PDF parsing failed:', {
                 error: parseError,
                 message: parseError instanceof Error ? parseError.message : 'Unknown',
                 stack: parseError instanceof Error ? parseError.stack : undefined,
+                errorName: parseError instanceof Error ? parseError.name : 'Unknown',
             });
             throw parseError;
         }
@@ -171,18 +210,21 @@ Return only the JSON object, no additional text.`,
             },
         });
     } catch (error) {
-        console.error('Error parsing resume:', error);
+        const duration = Date.now() - startTime;
+        console.error('[Resume Parse] Error parsing resume:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         const errorStack = error instanceof Error ? error.stack : undefined;
         
         // Log more details for debugging (always log in Vercel)
-        console.error('Resume parsing error details:', {
+        console.error('[Resume Parse] Error details:', {
             message: errorMessage,
             stack: errorStack,
             name: error instanceof Error ? error.name : 'Unknown',
             nodeVersion: process.version,
             platform: process.platform,
             env: process.env.NODE_ENV,
+            duration: `${duration}ms`,
+            timestamp: new Date().toISOString(),
         });
         
         // Return error details in production for Vercel debugging
@@ -191,7 +233,8 @@ Return only the JSON object, no additional text.`,
                 success: false, 
                 error: 'Failed to parse resume',
                 details: errorMessage, // Always return details for Vercel debugging
-                errorType: error instanceof Error ? error.name : 'Unknown'
+                errorType: error instanceof Error ? error.name : 'Unknown',
+                duration: `${duration}ms`,
             },
             { status: 500 }
         );

@@ -71,6 +71,10 @@
     "typescript": "^5"
   },
   "description": "The most advanced AI-powered interview preparation platform for software engineers, web developers, data scientists, and tech professionals. Practice realistic technical and behavioral interviews with personalized feedback.",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=11.7.0"
+  },
   "main": "index.js",
   "directories": {
     "lib": "lib"

@@ -73,6 +73,14 @@ async function parsePDF(buffer: Buffer): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+    // Disable resume parsing in production
+    if (process.env.NODE_ENV === 'production') {
+        return NextResponse.json(
+            { success: false, error: 'Resume parsing is only available in development mode' },
+            { status: 403 }
+        );
+    }
+
     const startTime = Date.now();
     console.log('[Resume Parse] Request received at', new Date().toISOString());
     

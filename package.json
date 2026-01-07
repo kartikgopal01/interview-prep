@@ -22,7 +22,7 @@
     "@react-three/fiber": "^9.3.0",
     "@stream-io/video-react-sdk": "^1.16.0",
     "@tabler/icons-react": "^3.34.1",
-    "@vapi-ai/web": "^2.2.5",
+    "@vapi-ai/web": "^2.5.2",
     "@videosdk.live/react-sdk": "^0.3.4",
     "@zegocloud/zego-uikit-prebuilt": "^2.14.3-beta",
     "ai": "^4.2.8",

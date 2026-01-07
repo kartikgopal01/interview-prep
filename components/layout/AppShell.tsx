@@ -49,9 +49,6 @@ export default function AppShell({ children }: AppShellProps) {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/profile">
-            <Button variant="outline" size="sm">Account</Button>
-          </Link>
         </div>
       </header>
 

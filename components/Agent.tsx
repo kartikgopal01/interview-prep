@@ -24,6 +24,7 @@ interface SavedMessage {
 }
 
 const Agent = ({ userName, userId, type, interviewId, questions, resumeData: propResumeData }: AgentProps) => {
+    const isDevelopment = process.env.NODE_ENV === 'development';
     const router = useRouter();
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
@@ -223,9 +224,9 @@ const Agent = ({ userName, userId, type, interviewId, questions, resumeData: pro
             toast.error('Please enter a job role');
             return;
         }
-        // Make techstack optional if resume is uploaded
-        if (formData.techstack.length === 0 && !formData.resumeData) {
-            toast.error('Please add at least one technology or upload a resume');
+        // Make techstack optional if resume is uploaded (only in development)
+        if (formData.techstack.length === 0 && !(isDevelopment && formData.resumeData)) {
+            toast.error('Please add at least one technology' + (isDevelopment ? ' or upload a resume' : ''));
             return;
         }
 
@@ -243,7 +244,7 @@ const Agent = ({ userName, userId, type, interviewId, questions, resumeData: pro
                     techstack: formData.techstack.join(','),
                     amount: formData.amount,
                     userid: userId,
-                    resumeData: formData.resumeData
+                    resumeData: isDevelopment ? formData.resumeData : null
                 }),
             });
 
@@ -282,7 +283,8 @@ const Agent = ({ userName, userId, type, interviewId, questions, resumeData: pro
             }
 
             // Get resume data from props (for existing interviews) or form (for new interviews)
-            const resumeData = propResumeData || formData.resumeData;
+            // Only use resume data in development
+            const resumeData = isDevelopment ? (propResumeData || formData.resumeData) : null;
             
             // Build resume context for the interviewer
             let resumeContext = '';
@@ -407,7 +409,7 @@ IMPORTANT: Address the candidate by their name "${candidateName}" during the int
                         <div className="space-y-2">
                             <Label htmlFor="type">
                                 Question Focus
-                                {formData.resumeData && <span className="text-xs text-muted-foreground ml-2">(Optional with resume)</span>}
+                                {isDevelopment && formData.resumeData && <span className="text-xs text-muted-foreground ml-2">(Optional with resume)</span>}
                             </Label>
                             <select
                                 id="type"
@@ -426,7 +428,7 @@ IMPORTANT: Address the candidate by their name "${candidateName}" during the int
                         <div className="space-y-2">
                             <Label htmlFor="techInput">
                                 Technologies
-                                {formData.resumeData && <span className="text-xs text-muted-foreground ml-2">(Optional with resume)</span>}
+                                {isDevelopment && formData.resumeData && <span className="text-xs text-muted-foreground ml-2">(Optional with resume)</span>}
                             </Label>
                             <div className="flex items-center gap-2">
                                 <input
@@ -472,48 +474,50 @@ IMPORTANT: Address the candidate by their name "${candidateName}" during the int
                             </div>
                         </div>
 
-                        {/* Resume Upload */}
-                        <div className="space-y-2">
-                            <Label htmlFor="resume">Resume (Optional)</Label>
+                        {/* Resume Upload - Only in Development */}
+                        {isDevelopment && (
                             <div className="space-y-2">
-                                <input
-                                    id="resume"
-                                    name="resume"
-                                    type="file"
-                                    accept="application/pdf"
-                                    onChange={handleResumeChange}
-                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:border-primary transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90"
-                                    disabled={resumeParsing}
-                                />
-                                {resumeParsing && (
-                                    <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Parsing resume...</span>
-                                    </div>
-                                )}
-                                {formData.resumeData && (
-                                    <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
-                                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                                            ✓ Resume loaded: {formData.resumeData.name}
-                                        </p>
-                                        {formData.resumeData.skills && formData.resumeData.skills.length > 0 && (
-                                            <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                                                Skills: {formData.resumeData.skills.slice(0, 5).join(', ')}
-                                                {formData.resumeData.skills.length > 5 && '...'}
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-                                <p className="text-xs text-muted-foreground">
-                                    Upload your resume to get personalized questions based on your experience. The AI will address you by name during the interview.
-                                    {formData.resumeData && (
-                                        <span className="block mt-1 text-green-700 dark:text-green-300 font-medium">
-                                            ✓ Technologies and Question Focus are now optional - questions will be based on your resume.
-                                        </span>
+                                <Label htmlFor="resume">Resume (Optional)</Label>
+                                <div className="space-y-2">
+                                    <input
+                                        id="resume"
+                                        name="resume"
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={handleResumeChange}
+                                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-md bg-transparent focus:border-primary transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-primary/90"
+                                        disabled={resumeParsing}
+                                    />
+                                    {resumeParsing && (
+                                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Parsing resume...</span>
+                                        </div>
                                     )}
-                                </p>
+                                    {formData.resumeData && (
+                                        <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                                            <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                                                ✓ Resume loaded: {formData.resumeData.name}
+                                            </p>
+                                            {formData.resumeData.skills && formData.resumeData.skills.length > 0 && (
+                                                <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                                                    Skills: {formData.resumeData.skills.slice(0, 5).join(', ')}
+                                                    {formData.resumeData.skills.length > 5 && '...'}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-muted-foreground">
+                                        Upload your resume to get personalized questions based on your experience. The AI will address you by name during the interview.
+                                        {formData.resumeData && (
+                                            <span className="block mt-1 text-green-700 dark:text-green-300 font-medium">
+                                                ✓ Technologies and Question Focus are now optional - questions will be based on your resume.
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Number of Questions */}
                         <div className="space-y-2">

@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/actions/auth.action";
 import { getUserStats } from "@/lib/actions/general.action";
 import { getUserPeerInterviews } from "@/lib/actions/peer-interview.action";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, Trophy, TrendingUp, Target, Star, BookOpen, Users } from "lucide-react";
+import { User, Trophy, TrendingUp, BookOpen, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -105,59 +105,6 @@ const ProfilePage = async () => {
                                 <p className="text-xs text-muted-foreground">
                                     {peerStats.completed} completed
                                 </p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Strengths and Improvement Areas */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Star className="h-5 w-5 text-yellow-500" />
-                                    Your Strengths
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {userStats?.strengths && userStats.strengths.length > 0 ? (
-                                    <ul className="space-y-2">
-                                        {userStats.strengths.slice(0, 5).map((strength, index) => (
-                                            <li key={index} className="flex items-center gap-2">
-                                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                                <span className="text-sm">{strength}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-gray-500 dark:text-gray-400">
-                                        Complete your first interview to see your strengths!
-                                    </p>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Target className="h-5 w-5 text-blue-500" />
-                                    Areas for Improvement
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                {userStats?.improvementAreas && userStats.improvementAreas.length > 0 ? (
-                                    <ul className="space-y-2">
-                                        {userStats.improvementAreas.slice(0, 5).map((area, index) => (
-                                            <li key={index} className="flex items-center gap-2">
-                                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                <span className="text-sm">{area}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-gray-500 dark:text-gray-400">
-                                        Complete your first interview to get improvement suggestions!
-                                    </p>
-                                )}
                             </CardContent>
                         </Card>
                     </div>
